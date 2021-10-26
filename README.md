@@ -6,14 +6,13 @@ the entirety of the mohazit scripting mini-language is implemented in pure Go
 
 here's an example of what mohazit code (will) look like:
 
-```sh
+```rb
 # number up to (including) ten
-set num limited-rng 10
-# ask the user for a number
+set num = limited-rng 10
+# ask the = user for a number
 set guess ask-number
 # compare
-# use a shell-like dollar sign to distinguish variable from string literal
-if $num (equals) guess
+if `num` (equals) `guess`
     # that was a good guess!
     say Congratulations! You guessed the number!
 else
@@ -27,7 +26,7 @@ end
 
 example with labels:
 
-```sh
+```rb
 label greater
     say Woah!
     say That number is greater than 10!
@@ -41,7 +40,7 @@ label lower
 end
 
 set num ask-number
-if $num (greater) 10
+if `num` (greater) 10
     goto greater
 else
     goto lower
