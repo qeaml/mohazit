@@ -1,0 +1,21 @@
+say hello
+say what is up
+say 123 -123
+say no yes no
+label win
+	say Congratulations!
+	say You win
+end
+label lose
+	say Oh well this is sad...
+   say You lost
+end
+if (chance)
+	say that is ok
+	say how about you win now
+	goto win
+else
+	say that is not ok
+	say so, you sadly do not win
+	goto lose
+end

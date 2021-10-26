@@ -86,9 +86,8 @@ func (p *Parser) typeOf(s string) ObjectType {
 	return objStr
 }
 
-func (p *Parser) parseObject(s string) (*Object, error) {
+func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
 	s = strings.TrimSpace(s)
-	t := p.typeOf(s)
 	switch t {
 	case objNil:
 		return p.objNil(), nil
@@ -114,16 +113,18 @@ func (p *Parser) parseObject(s string) (*Object, error) {
 }
 
 func (p *Parser) parseArgs(a []string) ([]*Object, error) {
-	if len(a) == 0 {
-		return []*Object{}, nil
-	}
-	if p.typeOf(a[0]) == objStr {
-		in := strings.Join(a, " ")
-		return []*Object{p.objStr(in)}, nil
-	}
 	objs := []*Object{}
 	for _, v := range a {
-		o, err := p.parseObject(v)
+		t := p.typeOf(v)
+		if len(objs) > 0 && t == objStr {
+			prev := objs[len(objs)-1]
+			if prev.Type == objStr {
+				prev.StrV += " " + v
+				objs[len(objs)-1] = prev
+				continue
+			}
+		}
+		o, err := p.parseObject(v, t)
 		if err != nil {
 			return []*Object{}, err
 		}

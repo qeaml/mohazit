@@ -3,7 +3,9 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"io"
 	"mohazit/tool"
+	"os"
 	"strings"
 )
 
@@ -122,7 +124,7 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 			case "say":
 				txt := []string{}
 				for _, a := range st.Args {
-					txt = append(txt, a.Repr())
+					txt = append(txt, a.String())
 				}
 				fmt.Println(strings.Join(txt, " "))
 				return nil
@@ -158,6 +160,38 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 		}
 		i.labelName = lnr.StrV
 		tool.Log("label block starts: " + i.labelName)
+	}
+	return nil
+}
+
+func (i *Interpreter) RunFile(fn string) error {
+	f, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	srcRaw, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+	src := string(srcRaw)
+	lines := []string{}
+	ctx := ""
+	for _, c := range src {
+		if c == '\n' {
+			if ctx[len(ctx)-1] == '\\' {
+				ctx = ctx[:len(ctx)-1]
+			} else {
+				lines = append(lines, ctx)
+				ctx = ""
+			}
+		} else {
+			ctx += string(c)
+		}
+	}
+	for _, l := range lines {
+		if err = i.RunLine(l); err != nil {
+			return err
+		}
 	}
 	return nil
 }
