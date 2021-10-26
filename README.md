@@ -9,8 +9,8 @@ here's an example of what mohazit code (will) look like:
 ```rb
 # number up to (including) ten
 set num = limited-rng 10
-# ask the = user for a number
-set guess ask-number
+# ask the user for a number
+set guess = ask-number
 # compare
 if `num` (equals) `guess`
     # that was a good guess!
