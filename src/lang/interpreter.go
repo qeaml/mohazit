@@ -51,7 +51,7 @@ func (i *Interpreter) RunLine(line string) error {
 	if line == "" || strings.HasPrefix(line, "#") {
 		return nil
 	}
-	st, err := i.parser.ReadStatement(line)
+	st, err := i.parser.ParseStatement(line)
 	if err != nil {
 		return err
 	}
@@ -109,15 +109,15 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 			switch st.Func {
 			case "goto":
 				if len(st.Args) < 1 {
-					return errors.New("goto requires a label name to jump to")
+					return i.err("goto requires a label name to jump to")
 				}
 				target := st.Args[0]
 				if target.Type != objStr {
-					return errors.New("goto argument must be a string")
+					return i.err("goto argument must be a string")
 				}
 				stmt, ok := i.labelMap[target.StrV]
 				if !ok {
-					return errors.New("label not found: " + target.StrV)
+					return i.err("label not found: " + target.StrV)
 				}
 				tool.Log("GOTO going to to: " + target.StrV)
 				return i.RunAll(stmt)
@@ -128,35 +128,37 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 				}
 				fmt.Println(strings.Join(txt, " "))
 				return nil
+			default:
+				return i.err("unknown function: " + st.Func)
 			}
 		}
 	case stSet:
 		break
 	case stIf:
 		if i.ctx == ctxIf {
-			return errors.New("nested if blocks are not supported")
+			return i.err("nested if blocks are not supported")
 		} else if i.ctx != ctxGlobal {
-			return errors.New("unexpected if block")
+			return i.err("unexpected if block")
 		}
 		i.ctx = ctxIf
 		tool.Log("if block starts")
 	case stElse:
 		if i.ctx != ctxIf {
-			return errors.New("else block with no preceding if block")
+			return i.err("else block with no preceding if block")
 		}
 		i.ctx = ctxElse
 		tool.Log("else block starts")
 	case stLabel:
 		if i.ctx != ctxGlobal {
-			return errors.New("unexpected label block")
+			return i.err("unexpected label block")
 		}
 		i.ctx = ctxLabel
 		if len(st.Args) < 1 {
-			return errors.New("must specify label name")
+			return i.err("must specify label name")
 		}
 		lnr := st.Args[0]
 		if lnr.Type != objStr {
-			return errors.New("label name must be a string")
+			return i.err("label name must be a string")
 		}
 		i.labelName = lnr.StrV
 		tool.Log("label block starts: " + i.labelName)
@@ -194,4 +196,33 @@ func (i *Interpreter) RunFile(fn string) error {
 		}
 	}
 	return nil
+}
+
+func (i *Interpreter) Context() string {
+	switch i.ctx {
+	case ctxIf:
+		return "if   "
+	case ctxElse:
+		return "else "
+	case ctxLabel:
+		n := i.labelName
+		if len(n) > 4 {
+			n = n[:4]
+		}
+		if len(n) < 4 {
+			for len(n) != 4 {
+				n += " "
+			}
+		}
+		return n + " "
+	}
+	return ""
+}
+
+// func (i *Interpreter) errOf(err error) error {
+// 	return i.err("interpreter error: " + err.Error())
+// }
+
+func (i *Interpreter) err(txt string) error {
+	return errors.New("interpreter error: " + txt)
 }

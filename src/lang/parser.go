@@ -133,7 +133,7 @@ func (p *Parser) parseArgs(a []string) ([]*Object, error) {
 	return objs, nil
 }
 
-func (p *Parser) ReadStatement(s string) (*Statement, error) {
+func (p *Parser) ParseStatement(s string) (*Statement, error) {
 	var (
 		ctx        string
 		keyword    string
@@ -181,11 +181,15 @@ func (p *Parser) ReadStatement(s string) (*Statement, error) {
 	}
 	args, err := p.parseArgs(argsRaw)
 	if err != nil {
-		return nil, err
+		return nil, p.errOf(err)
 	}
 	return &Statement{
 		Type: stype,
 		Func: function,
 		Args: args,
 	}, nil
+}
+
+func (p *Parser) errOf(err error) error {
+	return errors.New("parser error: " + err.Error())
 }
