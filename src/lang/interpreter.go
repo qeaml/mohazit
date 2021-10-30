@@ -2,7 +2,6 @@ package lang
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"mohazit/tool"
 	"os"
@@ -112,7 +111,7 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 					return i.err("goto requires a label name to jump to")
 				}
 				target := st.Args[0]
-				if target.Type != objStr {
+				if target.Type != ObjStr {
 					return i.err("goto argument must be a string")
 				}
 				stmt, ok := i.labelMap[target.StrV]
@@ -121,15 +120,12 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 				}
 				tool.Log("GOTO going to to: " + target.StrV)
 				return i.RunAll(stmt)
-			case "say":
-				txt := []string{}
-				for _, a := range st.Args {
-					txt = append(txt, a.String())
-				}
-				fmt.Println(strings.Join(txt, " "))
-				return nil
 			default:
-				return i.err("unknown function: " + st.Func)
+				f, ok := Funcs[st.Func]
+				if !ok {
+					return i.err("unknown function: " + st.Func)
+				}
+				return f(st.Args)
 			}
 		}
 	case stSet:
@@ -157,7 +153,7 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 			return i.err("must specify label name")
 		}
 		lnr := st.Args[0]
-		if lnr.Type != objStr {
+		if lnr.Type != ObjStr {
 			return i.err("label name must be a string")
 		}
 		i.labelName = lnr.StrV
@@ -226,3 +222,7 @@ func (i *Interpreter) Context() string {
 func (i *Interpreter) err(txt string) error {
 	return errors.New("interpreter error: " + txt)
 }
+
+type FuncMap map[string]func([]*Object) error
+
+var Funcs = make(FuncMap)

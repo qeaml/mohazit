@@ -47,27 +47,27 @@ func (p *Parser) id(s string) string {
 
 func (p *Parser) objNil() *Object {
 	return &Object{
-		Type: objNil,
+		Type: ObjNil,
 	}
 }
 
 func (p *Parser) objInt(i int) *Object {
 	return &Object{
-		Type: objInt,
+		Type: ObjInt,
 		IntV: i,
 	}
 }
 
 func (p *Parser) objBool(b bool) *Object {
 	return &Object{
-		Type:  objBool,
+		Type:  ObjBool,
 		BoolV: b,
 	}
 }
 
 func (p *Parser) objStr(s string) *Object {
 	return &Object{
-		Type: objStr,
+		Type: ObjStr,
 		StrV: s,
 	}
 }
@@ -76,22 +76,22 @@ func (p *Parser) typeOf(s string) ObjectType {
 	s = strings.TrimSpace(s)
 	switch strings.ToLower(s) {
 	case "nil":
-		return objNil
+		return ObjNil
 	case "true", "yes", "false", "no":
-		return objBool
+		return ObjBool
 	}
 	if s[0] == '-' || p.isDigit(s[0]) {
-		return objInt
+		return ObjInt
 	}
-	return objStr
+	return ObjStr
 }
 
 func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
 	s = strings.TrimSpace(s)
 	switch t {
-	case objNil:
+	case ObjNil:
 		return p.objNil(), nil
-	case objBool:
+	case ObjBool:
 		s = strings.ToLower(s)
 		if s == "true" || s == "yes" {
 			return p.objBool(true), nil
@@ -100,13 +100,13 @@ func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
 			return p.objBool(false), nil
 		}
 		return p.objNil(), errors.New("invalid boolean value: " + s)
-	case objInt:
+	case ObjInt:
 		i, err := strconv.Atoi(s)
 		if err != nil {
 			return p.objNil(), err
 		}
 		return p.objInt(i), nil
-	case objStr:
+	case ObjStr:
 		return p.objStr(s), nil
 	}
 	return p.objNil(), errors.New("could not deterime type of value: " + s)
@@ -116,12 +116,17 @@ func (p *Parser) parseArgs(a []string) ([]*Object, error) {
 	objs := []*Object{}
 	for _, v := range a {
 		t := p.typeOf(v)
-		if len(objs) > 0 && t == objStr {
+		if len(objs) > 0 && t == ObjStr {
 			prev := objs[len(objs)-1]
-			if prev.Type == objStr {
-				prev.StrV += " " + v
-				objs[len(objs)-1] = prev
-				continue
+			if prev.Type == ObjStr {
+				if strings.HasSuffix(prev.StrV, "\\") {
+					prev.StrV = strings.TrimSpace(strings.TrimSuffix(prev.StrV, "\\"))
+					objs[len(objs)-1] = prev
+				} else {
+					prev.StrV += " " + v
+					objs[len(objs)-1] = prev
+					continue
+				}
 			}
 		}
 		o, err := p.parseObject(v, t)

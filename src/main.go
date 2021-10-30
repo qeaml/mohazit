@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mohazit/lang"
+	"mohazit/opers"
 	"mohazit/tool"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 var i = lang.NewInterpreter()
 
 func main() {
+	opers.Init()
 	if len(os.Args) <= 1 {
 		repl()
 	} else {

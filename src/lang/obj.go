@@ -5,10 +5,10 @@ import "fmt"
 type ObjectType uint8
 
 const (
-	objNil ObjectType = iota
-	objStr
-	objInt
-	objBool
+	ObjNil ObjectType = iota
+	ObjStr
+	ObjInt
+	ObjBool
 )
 
 type Object struct {
@@ -20,13 +20,13 @@ type Object struct {
 
 func (o *Object) Repr() string {
 	switch o.Type {
-	case objNil:
+	case ObjNil:
 		return "[Nil]"
-	case objStr:
+	case ObjStr:
 		return "[Str `" + o.StrV + "`]"
-	case objInt:
+	case ObjInt:
 		return fmt.Sprintf("[Int %d]", o.IntV)
-	case objBool:
+	case ObjBool:
 		return fmt.Sprintf("[Bool %t]", o.BoolV)
 	}
 	return "?"
@@ -34,13 +34,13 @@ func (o *Object) Repr() string {
 
 func (o *Object) String() string {
 	switch o.Type {
-	case objNil:
+	case ObjNil:
 		return "Nil"
-	case objStr:
+	case ObjStr:
 		return o.StrV
-	case objInt:
+	case ObjInt:
 		return fmt.Sprint(o.IntV)
-	case objBool:
+	case ObjBool:
 		return fmt.Sprint(o.BoolV)
 	}
 	return "?"
