@@ -6,6 +6,9 @@ import (
 )
 
 func equals(objs []*lang.Object) (bool, error) {
+	for _, o := range objs {
+		tool.Log(o.String())
+	}
 	for _, a := range objs {
 		for _, b := range objs {
 			if a.Type != b.Type {
@@ -31,9 +34,6 @@ func equals(objs []*lang.Object) (bool, error) {
 }
 
 func notEquals(objs []*lang.Object) (bool, error) {
-	for _, o := range objs {
-		tool.Log(o.String())
-	}
 	eq, err := equals(objs)
 	return !eq, err
 }

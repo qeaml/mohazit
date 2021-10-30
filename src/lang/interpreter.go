@@ -15,17 +15,20 @@ const (
 	ctxIf
 	ctxElse
 	ctxLabel
+	ctxUnless
 )
 
 type Interpreter struct {
-	parser      *Parser
-	ctx         Context
-	ifCondition bool
-	ifBlock     []*Statement
-	elseBlock   []*Statement
-	labelName   string
-	labelBlock  []*Statement
-	labelMap    map[string][]*Statement
+	parser          *Parser
+	ctx             Context
+	ifCondition     bool
+	ifBlock         []*Statement
+	elseBlock       []*Statement
+	unlessCondition bool
+	unlessBlock     []*Statement
+	labelName       string
+	labelBlock      []*Statement
+	labelMap        map[string][]*Statement
 }
 
 func NewInterpreter() *Interpreter {
@@ -70,10 +73,11 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 				i.ctx = ctxGlobal
 				if i.ifCondition {
 					tool.Log("running if block")
+					tool.Log("if-end", len(i.ifBlock))
 					i.RunAll(i.ifBlock)
-					i.ifBlock = i.noStmt()
-					i.elseBlock = i.noStmt()
 				}
+				i.ifBlock = i.noStmt()
+				i.elseBlock = i.noStmt()
 				// tool.Log("if block ends")
 			} else {
 				i.ifBlock = append(i.ifBlock, st)
@@ -84,19 +88,29 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 				i.ctx = ctxGlobal
 				if i.ifCondition {
 					tool.Log("running if block")
+					tool.Log("else-end", len(i.ifBlock))
 					i.RunAll(i.ifBlock)
-					i.ifBlock = i.noStmt()
-					i.elseBlock = i.noStmt()
 				} else {
 					tool.Log("running else block")
 					i.RunAll(i.elseBlock)
-					i.ifBlock = i.noStmt()
-					i.elseBlock = i.noStmt()
 				}
+				i.ifBlock = i.noStmt()
+				i.elseBlock = i.noStmt()
 				// tool.Log("else block ends")
 			} else {
 				i.elseBlock = append(i.elseBlock, st)
 				// tool.Log("else block statement: " + st.Repr())
+			}
+		case ctxUnless:
+			if st.Func == "end" {
+				i.ctx = ctxGlobal
+				if !i.unlessCondition {
+					i.RunAll(i.unlessBlock)
+				}
+				i.unlessBlock = i.noStmt()
+				i.elseBlock = i.noStmt()
+			} else {
+				i.unlessBlock = append(i.unlessBlock, st)
 			}
 		case ctxLabel:
 			if st.Func == "end" {
@@ -154,11 +168,12 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 		if err != nil {
 			return i.errOf(err)
 		}
+		tool.Log("compared", res)
 		i.ifCondition = res
 		// tool.Log("if block starts")
 	case stElse:
-		if i.ctx != ctxIf {
-			return i.err("else block with no preceding if block")
+		if i.ctx != ctxIf && i.ctx != ctxUnless {
+			return i.err("else block with no preceding if or unless block")
 		}
 		i.ctx = ctxElse
 		// tool.Log("else block starts")
@@ -176,6 +191,26 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 		}
 		i.labelName = lnr.StrV
 		// tool.Log("label block starts: " + i.labelName)
+	case stUnless:
+		if i.ctx == ctxUnless {
+			return i.err("nested unless blocks are not supported")
+		} else if i.ctx != ctxGlobal {
+			return i.err("unexpected unless block")
+		}
+		i.ctx = ctxUnless
+		cond, err := ParseConditional(st.ArgsSrc, i.parser)
+		if err != nil {
+			return i.errOf(err)
+		}
+		f, ok := Comps[cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + cond.Comp)
+		}
+		res, err := f(cond.Args)
+		if err != nil {
+			return i.errOf(err)
+		}
+		i.unlessCondition = res
 	}
 	return nil
 }

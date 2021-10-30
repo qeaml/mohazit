@@ -14,6 +14,7 @@ const (
 	stIf
 	stElse
 	stLabel
+	stUnless
 )
 
 type Statement struct {
@@ -182,6 +183,8 @@ func (p *Parser) ParseStatement(s string) (*Statement, error) {
 		stype = stElse
 	case "label":
 		stype = stLabel
+	case "unless":
+		stype = stUnless
 	default:
 		stype = stCall
 	}
