@@ -1,8 +1,10 @@
 package opers
 
 import (
+	"math/rand"
 	"mohazit/lang"
 	"mohazit/tool"
+	"time"
 )
 
 func equals(objs []*lang.Object) (bool, error) {
@@ -36,4 +38,9 @@ func equals(objs []*lang.Object) (bool, error) {
 func notEquals(objs []*lang.Object) (bool, error) {
 	eq, err := equals(objs)
 	return !eq, err
+}
+
+func chance(objs []*lang.Object) (bool, error) {
+	r := rand.New(rand.NewSource(time.Now().UnixMilli()))
+	return r.Float64() < 0.5, nil
 }

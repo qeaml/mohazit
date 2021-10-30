@@ -25,6 +25,8 @@ func Init() {
 	}
 	lang.Comps = lang.CompMap{
 		"equals":     equals,
+		"=":          equals,
 		"not-equals": notEquals,
+		"chance":     chance,
 	}
 }
