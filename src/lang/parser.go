@@ -17,9 +17,10 @@ const (
 )
 
 type Statement struct {
-	Type StatementType
-	Func string
-	Args []*Object
+	Type    StatementType
+	Func    string
+	Args    []*Object
+	ArgsSrc string
 }
 
 func (s *Statement) Repr() string {
@@ -74,6 +75,9 @@ func (p *Parser) objStr(s string) *Object {
 
 func (p *Parser) typeOf(s string) ObjectType {
 	s = strings.TrimSpace(s)
+	if s == "" {
+		return ObjNil
+	}
 	switch strings.ToLower(s) {
 	case "nil":
 		return ObjNil
@@ -189,9 +193,10 @@ func (p *Parser) ParseStatement(s string) (*Statement, error) {
 		return nil, p.errOf(err)
 	}
 	return &Statement{
-		Type: stype,
-		Func: function,
-		Args: args,
+		Type:    stype,
+		Func:    function,
+		Args:    args,
+		ArgsSrc: strings.Join(argsRaw, " "),
 	}, nil
 }
 

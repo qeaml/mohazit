@@ -23,4 +23,8 @@ func Init() {
 		"file-copy":   fileCopy,
 		"file-write":  fileWrite,
 	}
+	lang.Comps = lang.CompMap{
+		"equals":     equals,
+		"not-equals": notEquals,
+	}
 }

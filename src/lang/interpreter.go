@@ -74,37 +74,42 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 					i.ifBlock = i.noStmt()
 					i.elseBlock = i.noStmt()
 				}
-				tool.Log("if block ends")
+				// tool.Log("if block ends")
 			} else {
 				i.ifBlock = append(i.ifBlock, st)
-				tool.Log("if block statement: " + st.Repr())
+				// tool.Log("if block statement: " + st.Repr())
 			}
 		case ctxElse:
 			if st.Func == "end" {
 				i.ctx = ctxGlobal
-				if !i.ifCondition {
+				if i.ifCondition {
+					tool.Log("running if block")
+					i.RunAll(i.ifBlock)
+					i.ifBlock = i.noStmt()
+					i.elseBlock = i.noStmt()
+				} else {
 					tool.Log("running else block")
 					i.RunAll(i.elseBlock)
 					i.ifBlock = i.noStmt()
 					i.elseBlock = i.noStmt()
 				}
-				tool.Log("else block ends")
+				// tool.Log("else block ends")
 			} else {
 				i.elseBlock = append(i.elseBlock, st)
-				tool.Log("else block statement: " + st.Repr())
+				// tool.Log("else block statement: " + st.Repr())
 			}
 		case ctxLabel:
 			if st.Func == "end" {
 				i.ctx = ctxGlobal
 				i.labelMap[i.labelName] = i.labelBlock
 				i.labelBlock = i.noStmt()
-				tool.Log("label block ends")
+				// tool.Log("label block ends")
 			} else {
 				i.labelBlock = append(i.labelBlock, st)
-				tool.Log("label block statement: " + st.Repr())
+				// tool.Log("label block statement: " + st.Repr())
 			}
 		case ctxGlobal:
-			tool.Log("regular function call: " + st.Repr())
+			// tool.Log("regular function call: " + st.Repr())
 			switch st.Func {
 			case "goto":
 				if len(st.Args) < 1 {
@@ -137,13 +142,26 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 			return i.err("unexpected if block")
 		}
 		i.ctx = ctxIf
-		tool.Log("if block starts")
+		cond, err := ParseConditional(st.ArgsSrc, i.parser)
+		if err != nil {
+			return i.errOf(err)
+		}
+		f, ok := Comps[cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + cond.Comp)
+		}
+		res, err := f(cond.Args)
+		if err != nil {
+			return i.errOf(err)
+		}
+		i.ifCondition = res
+		// tool.Log("if block starts")
 	case stElse:
 		if i.ctx != ctxIf {
 			return i.err("else block with no preceding if block")
 		}
 		i.ctx = ctxElse
-		tool.Log("else block starts")
+		// tool.Log("else block starts")
 	case stLabel:
 		if i.ctx != ctxGlobal {
 			return i.err("unexpected label block")
@@ -157,7 +175,7 @@ func (i *Interpreter) RunStatement(st *Statement) error {
 			return i.err("label name must be a string")
 		}
 		i.labelName = lnr.StrV
-		tool.Log("label block starts: " + i.labelName)
+		// tool.Log("label block starts: " + i.labelName)
 	}
 	return nil
 }
@@ -176,7 +194,7 @@ func (i *Interpreter) RunFile(fn string) error {
 	ctx := ""
 	for _, c := range src {
 		if c == '\n' {
-			if ctx[len(ctx)-1] == '\\' {
+			if len(ctx) > 0 && ctx[len(ctx)-1] == '\\' {
 				ctx = ctx[:len(ctx)-1]
 			} else {
 				lines = append(lines, ctx)
@@ -215,14 +233,16 @@ func (i *Interpreter) Context() string {
 	return ""
 }
 
-// func (i *Interpreter) errOf(err error) error {
-// 	return i.err("interpreter error: " + err.Error())
-// }
+func (i *Interpreter) errOf(err error) error {
+	return i.err("interpreter error: " + err.Error())
+}
 
 func (i *Interpreter) err(txt string) error {
 	return errors.New("interpreter error: " + txt)
 }
 
 type FuncMap map[string]func([]*Object) error
+type CompMap map[string]func([]*Object) (bool, error)
 
 var Funcs = make(FuncMap)
+var Comps = make(CompMap)
