@@ -21,7 +21,7 @@ unless true (equals) false
 end
 
 #: you can compare more than one object at a time:
-  this compare all the arguments against each other. if at least one pair of
+  this compares all the arguments against each other. if at least one pair of
   these arguments is not equal - the result will be false. ##
 if 10 10 (equals) 10 10 10 10
     say 10 == 10 == 10 == 10 == 10 == 10 : OK
