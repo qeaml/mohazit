@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func fn(args []*lang.Object) (string, error) {
+func sFilename(args []*lang.Object) (string, error) {
 	if len(args) < 1 {
 		return "", needArgs("filename missing")
 	}
@@ -19,8 +19,8 @@ func fn(args []*lang.Object) (string, error) {
 	return fnObj.StrV, nil
 }
 
-func fileCreate(args []*lang.Object) error {
-	fn, err := fn(args)
+func fFileCreate(args []*lang.Object) error {
+	fn, err := sFilename(args)
 	if err != nil {
 		return err
 	}
@@ -29,12 +29,12 @@ func fileCreate(args []*lang.Object) error {
 	if err != nil {
 		return err
 	}
-	f.Close()
+	defer f.Close()
 	return nil
 }
 
-func fileDelete(args []*lang.Object) error {
-	fn, err := fn(args)
+func fFileDelete(args []*lang.Object) error {
+	fn, err := sFilename(args)
 	if err != nil {
 		return err
 	}
@@ -42,12 +42,12 @@ func fileDelete(args []*lang.Object) error {
 	return os.Remove(fn)
 }
 
-func fileRename(args []*lang.Object) error {
-	fn1, err := fn(args)
+func fFileRename(args []*lang.Object) error {
+	fn1, err := sFilename(args)
 	if err != nil {
 		return err
 	}
-	fn2, err := fn(args[1:])
+	fn2, err := sFilename(args[1:])
 	if err != nil {
 		return err
 	}
@@ -55,12 +55,12 @@ func fileRename(args []*lang.Object) error {
 	return os.Rename(fn1, fn2)
 }
 
-func fileCopy(args []*lang.Object) error {
-	fn1, err := fn(args)
+func fFileCopy(args []*lang.Object) error {
+	fn1, err := sFilename(args)
 	if err != nil {
 		return err
 	}
-	fn2, err := fn(args[1:])
+	fn2, err := sFilename(args[1:])
 	if err != nil {
 		return err
 	}
@@ -68,10 +68,12 @@ func fileCopy(args []*lang.Object) error {
 	if err != nil {
 		return err
 	}
+	defer f1.Close()
 	f2, err := os.Create(fn2)
 	if err != nil {
 		return err
 	}
+	defer f2.Close()
 	fmt.Println("Copying from " + fn1 + " to " + fn2)
 	data, err := io.ReadAll(f1)
 	if err != nil {
@@ -81,13 +83,11 @@ func fileCopy(args []*lang.Object) error {
 	if err != nil {
 		return err
 	}
-	f1.Close()
-	f2.Close()
 	return nil
 }
 
-func fileWrite(args []*lang.Object) error {
-	fn, err := fn(args)
+func fFileWrite(args []*lang.Object) error {
+	fn, err := sFilename(args)
 	if err != nil {
 		return err
 	}
@@ -101,14 +101,100 @@ func fileWrite(args []*lang.Object) error {
 	if err != nil {
 		return err
 	}
+	defer f1.Close()
 	_, err = f1.Write(data)
 	if err != nil {
 		return err
 	}
-	f1.Close()
 	return nil
 }
 
-func fileMove(args []*lang.Object) error {
+func fFileAppend(args []*lang.Object) error {
+	fn, err := sFilename(args)
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	fmt.Println("Appending to " + fn)
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	for _, o := range args[1:] {
+		data = append(data, ' ')
+		data = append(data, []byte(o.String())...)
+	}
+	file, err = os.Create(fn)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	file.Write(data)
 	return nil
+}
+
+func fFileMove(args []*lang.Object) error {
+	return nil
+}
+
+func cFileExists(args []*lang.Object) (bool, error) {
+	fn, err := sFilename(args)
+	if err != nil {
+		return false, err
+	}
+	f, err := os.Open(fn)
+	f.Close()
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func fDirCreate(args []*lang.Object) error {
+	dirname, err := sFilename(args)
+	if err != nil {
+		return err
+	}
+	return os.MkdirAll(dirname, os.ModePerm)
+}
+
+func fDirDelete(args []*lang.Object) error {
+	dirname, err := sFilename(args)
+	if err != nil {
+		return err
+	}
+	return os.Remove(dirname)
+}
+
+func fDirRename(args []*lang.Object) error {
+	oldname, err := sFilename(args)
+	if err != nil {
+		return err
+	}
+	newname, err := sFilename(args[1:])
+	if err != nil {
+		return err
+	}
+	return os.Rename(oldname, newname)
+}
+
+func cDirExists(args []*lang.Object) (bool, error) {
+	dirname, err := sFilename(args)
+	if err != nil {
+		return false, err
+	}
+	dirinfo, err := os.Stat(dirname)
+	if os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return dirinfo.IsDir(), nil
 }

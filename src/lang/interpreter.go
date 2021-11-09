@@ -18,6 +18,12 @@ const (
 	ctxUnless
 )
 
+const (
+	COMMENT_MULTI_BEGIN = "#:"
+	COMMENT_MULTI_END   = "##"
+	COMMENT_SINGLE      = "#"
+)
+
 type Interpreter struct {
 	parser          *Parser
 	ctx             Context
@@ -50,7 +56,7 @@ func (i *Interpreter) RunAll(lines []*Statement) error {
 
 func (i *Interpreter) RunLine(line string) error {
 	line = strings.TrimSpace(line)
-	if line == "" || strings.HasPrefix(line, "#") {
+	if line == "" || strings.HasPrefix(line, COMMENT_SINGLE) {
 		return nil
 	}
 	st, err := i.parser.ParseStatement(line)
@@ -227,13 +233,24 @@ func (i *Interpreter) RunFile(fn string) error {
 	src := string(srcRaw)
 	lines := []string{}
 	ctx := ""
+	comment := false
 	for _, c := range src {
 		if c == '\n' {
 			if len(ctx) > 0 && ctx[len(ctx)-1] == '\\' {
 				ctx = ctx[:len(ctx)-1]
 			} else {
-				lines = append(lines, ctx)
-				ctx = ""
+				if !comment {
+					if strings.HasPrefix(strings.TrimSpace(ctx), COMMENT_MULTI_BEGIN) {
+						comment = true
+						ctx = ""
+					} else {
+						lines = append(lines, ctx)
+						ctx = ""
+					}
+				} else if strings.HasSuffix(strings.TrimSpace(ctx), COMMENT_MULTI_END) {
+					comment = false
+					ctx = ""
+				}
 			}
 		} else {
 			ctx += string(c)

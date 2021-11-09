@@ -1,0 +1,29 @@
+file-create results
+
+file-append results \ Equals Test ::
+if 10 (equals) 10
+    file-append results \ OK |
+else
+    file-append results \ BAD |
+end
+
+file-append results \ Not Equals Test ::
+if 12 (<>) 10
+    file-append results \ OK |
+else
+    file-append results \ BAD |
+end
+
+file-append results \ ND Equals Test ::
+if 10 10 10 (equals) 10 10
+    file-append results \ OK |
+else
+    file-append results \ BAD |
+end
+
+file-append results \ file-exists Test ::
+if (file-exists) results
+    file-append results \ OK
+else
+    file-append results \ BAD
+end

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func say(args []*lang.Object) error {
+func fSay(args []*lang.Object) error {
 	elem := []string{}
 	for _, o := range args {
 		elem = append(elem, o.String())

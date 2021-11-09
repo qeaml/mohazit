@@ -2,9 +2,16 @@ package lang
 
 import (
 	"errors"
+	"mohazit/tool"
 	"strconv"
 	"strings"
 )
+
+func assert(cond bool, msg string) {
+	if !cond {
+		panic("assertion failed: " + msg)
+	}
+}
 
 type StatementType uint8
 
@@ -92,6 +99,7 @@ func (p *Parser) typeOf(s string) ObjectType {
 }
 
 func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
+	assert(t < ObjInv, "object type invalid")
 	s = strings.TrimSpace(s)
 	switch t {
 	case ObjNil:
@@ -118,6 +126,7 @@ func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
 }
 
 func (p *Parser) parseArgs(a []string) ([]*Object, error) {
+	tool.Log("parse args call: ", a)
 	objs := []*Object{}
 	for _, v := range a {
 		t := p.typeOf(v)

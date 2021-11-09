@@ -19,7 +19,7 @@ func ParseConditional(s string, p *Parser) (*Conditional, error) {
 	for _, c := range s {
 		if hasComp || !hasParams {
 			if c == '(' {
-				if len(params) > 1 && p.typeOf(params[len(params)-1]) == ObjStr {
+				if len(params) >= 1 && (p.typeOf(params[len(params)-1]) == ObjStr) {
 					params = append(params, "\\")
 				}
 				hasParams = true

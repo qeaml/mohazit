@@ -15,18 +15,30 @@ func badType(txt string) error {
 
 func Init() {
 	lang.Funcs = lang.FuncMap{
-		"say":         say,
-		"file-create": fileCreate,
-		"file-delete": fileDelete,
-		"file-rename": fileRename,
-		"file-move":   fileMove,
-		"file-copy":   fileCopy,
-		"file-write":  fileWrite,
+		"say":           fSay,
+		"compare":       fCompare,
+		"file-create":   fFileCreate,
+		"file-delete":   fFileDelete,
+		"file-rename":   fFileRename,
+		"file-move":     fFileMove,
+		"file-copy":     fFileCopy,
+		"file-write":    fFileWrite,
+		"file-append":   fFileAppend,
+		"dir-create":    fDirCreate,
+		"dir-delete":    fDirDelete,
+		"dir-rename":    fDirRename,
+		"folder-create": fDirCreate,
+		"folder-delete": fDirDelete,
+		"folder-rename": fDirRename,
 	}
 	lang.Comps = lang.CompMap{
-		"equals":     equals,
-		"=":          equals,
-		"not-equals": notEquals,
-		"chance":     chance,
+		"equals":        cEquals,
+		"=":             cEquals,
+		"not-equals":    cNotEquals,
+		"<>":            cNotEquals,
+		"chance":        cChance,
+		"file-exists":   cFileExists,
+		"dir-exists":    cDirExists,
+		"folder-exists": cDirExists,
 	}
 }

@@ -1,5 +1,5 @@
-# this is a strict comparison - if the types are not the same, then the objects
-# CANNOT be equal
+#: this is a strict comparison - if the types are not the same, then the objects
+   CANNOT be equal ##
 if 10 (equals) 11
     say 10 == 11 : Wrong
 end
@@ -7,24 +7,24 @@ end
 if 10 (not-equals) 11
     say 10 != 11 : OK
 else
-    say Wrong
+    say 10 == 11 : Wrong
 end
 
 if hello (not-equals) world
     say hello != world : OK
 else
-    say Wrong
+    say hello == world : Wrong
 end
 
 unless true (equals) false
     say true != false : OK
 end
 
-# you can compare more than one object at a time:
-# this compare all the arguments against each other. if at least one pair of
-# these arguments is not equal - the result will be false.
+#: you can compare more than one object at a time:
+  this compare all the arguments against each other. if at least one pair of
+  these arguments is not equal - the result will be false. ##
 if 10 10 (equals) 10 10 10 10
     say 10 == 10 == 10 == 10 == 10 == 10 : OK
 else
-    say Wrong
+    say 10 != 10 != 10 != 10 != 10 != 10 : Wrong
 end

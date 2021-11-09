@@ -9,6 +9,7 @@ const (
 	ObjStr
 	ObjInt
 	ObjBool
+	ObjInv
 )
 
 type Object struct {
