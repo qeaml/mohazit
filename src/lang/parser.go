@@ -179,6 +179,7 @@ type callStmt struct {
 }
 
 func (p *parser) toCall(gs *genStmt) (*callStmt, error) {
+	// TODO(qeaml): new and improved argument parsing
 	args, err := p.parseArgs([]string{gs.Arg})
 	if err != nil {
 		return nil, err
