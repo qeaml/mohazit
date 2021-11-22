@@ -6,8 +6,8 @@ import (
 )
 
 func TestInterpreter(t *testing.T) {
-	i := lang.NewInterpreter()
-	err := i.RunFile("examples/test.mhzt")
+	r := lang.NewRunner("test.mhzt")
+	err := r.DoFile("examples/test.mhzt")
 	if err != nil {
 		t.Fatal(err)
 	}

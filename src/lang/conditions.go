@@ -10,7 +10,7 @@ type Conditional struct {
 	Args []*Object
 }
 
-func ParseConditional(s string, p *Parser) (*Conditional, error) {
+func ParseConditional(s string, p *parser) (*Conditional, error) {
 	ctx := ""
 	params := []string{}
 	hasParams := false

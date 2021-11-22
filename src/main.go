@@ -1,22 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"mohazit/lang"
 	"mohazit/opers"
-	"mohazit/tool"
 	"os"
 	"strings"
 )
 
-var i = lang.NewInterpreter()
-
 func main() {
 	opers.Init()
 	if len(os.Args) <= 1 {
-		repl()
+		return
 	} else {
 		fn := os.Args[1]
 		if !strings.HasSuffix(fn, ".mhzt") {
@@ -26,37 +21,9 @@ func main() {
 				fn = assumed
 			}
 		}
-		err := i.RunFile(fn)
-		if err != nil {
-			fmt.Println("error: " + err.Error())
-		}
-	}
-}
-
-func repl() {
-	fmt.Println("Mohazit", tool.Version, tool.Iteration)
-	reader := bufio.NewReader(os.Stdin)
-	var err error
-	var in string
-	for {
-		fmt.Print(i.Context() + "> ")
-		in, err = reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			fmt.Println("\terror: " + err.Error())
-			break
-		}
-		if len(in) >= 2 && strings.HasPrefix(strings.TrimSpace(in), "#") {
-			do := strings.ToLower(strings.TrimSpace(in[1:]))
-			if strings.HasPrefix(do, "q") {
-				break
-			}
-		}
-		err = i.RunLine(in)
-		if err != nil {
-			fmt.Println("\terror: " + err.Error())
+		r := lang.NewRunner(fn)
+		if err := r.DoFile(fn); err != nil {
+			fmt.Println(err.Error())
 		}
 	}
 }

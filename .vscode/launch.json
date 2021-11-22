@@ -18,7 +18,8 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/src/main.go",
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "args": ["examples\\test.mhzt"]
         }
     ]
 }

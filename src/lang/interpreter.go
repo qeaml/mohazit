@@ -2,10 +2,6 @@ package lang
 
 import (
 	"errors"
-	"io"
-	"mohazit/tool"
-	"os"
-	"strings"
 )
 
 type Context uint8
@@ -18,35 +14,29 @@ const (
 	ctxUnless
 )
 
-const (
-	COMMENT_MULTI_BEGIN = "#:"
-	COMMENT_MULTI_END   = "##"
-	COMMENT_SINGLE      = "#"
-)
-
-type Interpreter struct {
-	parser          *Parser
+type interpreter struct {
+	parser          *parser
 	ctx             Context
 	ifCondition     bool
-	ifBlock         []*Statement
-	elseBlock       []*Statement
+	ifBlock         []*genStmt
+	elseBlock       []*genStmt
 	unlessCondition bool
-	unlessBlock     []*Statement
+	unlessBlock     []*genStmt
 	labelName       string
-	labelBlock      []*Statement
-	labelMap        map[string][]*Statement
+	labelBlock      []*genStmt
+	labelMap        map[string][]*genStmt
 }
 
-func NewInterpreter() *Interpreter {
-	return &Interpreter{
-		parser:   &Parser{},
-		labelMap: make(map[string][]*Statement),
+func NewInterpreter(p *parser) *interpreter {
+	return &interpreter{
+		parser:   p,
+		labelMap: make(map[string][]*genStmt),
 	}
 }
 
-func (i *Interpreter) RunAll(lines []*Statement) error {
+func (i *interpreter) runAll(st []*genStmt) error {
 	var err error
-	for _, s := range lines {
+	for _, s := range st {
 		if err = i.RunStatement(s); err != nil {
 			return err
 		}
@@ -54,242 +44,160 @@ func (i *Interpreter) RunAll(lines []*Statement) error {
 	return nil
 }
 
-func (i *Interpreter) RunLine(line string) error {
-	line = strings.TrimSpace(line)
-	if line == "" || strings.HasPrefix(line, COMMENT_SINGLE) {
-		return nil
-	}
-	st, err := i.parser.ParseStatement(line)
-	if err != nil {
-		return err
-	}
-	return i.RunStatement(st)
+func (i *interpreter) noStmt() []*genStmt {
+	return []*genStmt{}
 }
 
-func (i *Interpreter) noStmt() []*Statement {
-	return []*Statement{}
+func (i *interpreter) RunStatement(st *genStmt) error {
+	switch i.ctx {
+	case ctxGlobal:
+		return i.runGlobally(st)
+	case ctxIf:
+		return i.runInIf(st)
+	case ctxElse:
+		return i.runInElse(st)
+	case ctxUnless:
+		return i.runInUnless(st)
+	case ctxLabel:
+		return i.runInLabel(st)
+	default:
+		return i.err("internal interpreter error")
+	}
 }
 
-func (i *Interpreter) RunStatement(st *Statement) error {
-	switch st.Type {
-	case stCall:
-		switch i.ctx {
-		case ctxIf:
-			if st.Func == "end" {
-				i.ctx = ctxGlobal
-				if i.ifCondition {
-					tool.Log("running if block")
-					tool.Log("if-end", len(i.ifBlock))
-					i.RunAll(i.ifBlock)
-				}
-				i.ifBlock = i.noStmt()
-				i.elseBlock = i.noStmt()
-				// tool.Log("if block ends")
-			} else {
-				i.ifBlock = append(i.ifBlock, st)
-				// tool.Log("if block statement: " + st.Repr())
-			}
-		case ctxElse:
-			if st.Func == "end" {
-				i.ctx = ctxGlobal
-				if i.ifCondition {
-					tool.Log("running if block")
-					tool.Log("else-end", len(i.ifBlock))
-					i.RunAll(i.ifBlock)
-				} else {
-					tool.Log("running else block")
-					i.RunAll(i.elseBlock)
-				}
-				i.ifBlock = i.noStmt()
-				i.elseBlock = i.noStmt()
-				// tool.Log("else block ends")
-			} else {
-				i.elseBlock = append(i.elseBlock, st)
-				// tool.Log("else block statement: " + st.Repr())
-			}
-		case ctxUnless:
-			if st.Func == "end" {
-				i.ctx = ctxGlobal
-				if !i.unlessCondition {
-					i.RunAll(i.unlessBlock)
-				}
-				i.unlessBlock = i.noStmt()
-				i.elseBlock = i.noStmt()
-			} else {
-				i.unlessBlock = append(i.unlessBlock, st)
-			}
-		case ctxLabel:
-			if st.Func == "end" {
-				i.ctx = ctxGlobal
-				i.labelMap[i.labelName] = i.labelBlock
-				i.labelBlock = i.noStmt()
-				// tool.Log("label block ends")
-			} else {
-				i.labelBlock = append(i.labelBlock, st)
-				// tool.Log("label block statement: " + st.Repr())
-			}
-		case ctxGlobal:
-			// tool.Log("regular function call: " + st.Repr())
-			switch st.Func {
-			case "goto":
-				if len(st.Args) < 1 {
-					return i.err("goto requires a label name to jump to")
-				}
-				target := st.Args[0]
-				if target.Type != ObjStr {
-					return i.err("goto argument must be a string")
-				}
-				stmt, ok := i.labelMap[target.StrV]
-				if !ok {
-					return i.err("label not found: " + target.StrV)
-				}
-				tool.Log("GOTO going to to: " + target.StrV)
-				return i.RunAll(stmt)
-			default:
-				f, ok := Funcs[st.Func]
-				if !ok {
-					return i.err("unknown function: " + st.Func)
-				}
-				return f(st.Args)
-			}
-		}
-	case stSet:
-		break
-	case stIf:
-		if i.ctx == ctxIf {
-			return i.err("nested if blocks are not supported")
-		} else if i.ctx != ctxGlobal {
-			return i.err("unexpected if block")
-		}
-		i.ctx = ctxIf
-		cond, err := ParseConditional(st.ArgsSrc, i.parser)
+func (i *interpreter) runGlobally(st *genStmt) error {
+	switch st.Kw {
+	case "if":
+		condSt, err := i.parser.toCond(st)
 		if err != nil {
-			return i.errOf(err)
-		}
-		f, ok := Comps[cond.Comp]
-		if !ok {
-			return i.err("unknown comparator: " + cond.Comp)
-		}
-		res, err := f(cond.Args)
-		if err != nil {
-			return i.errOf(err)
-		}
-		tool.Log("compared", res)
-		i.ifCondition = res
-		// tool.Log("if block starts")
-	case stElse:
-		if i.ctx != ctxIf && i.ctx != ctxUnless {
-			return i.err("else block with no preceding if or unless block")
-		}
-		i.ctx = ctxElse
-		// tool.Log("else block starts")
-	case stLabel:
-		if i.ctx != ctxGlobal {
-			return i.err("unexpected label block")
-		}
-		i.ctx = ctxLabel
-		if len(st.Args) < 1 {
-			return i.err("must specify label name")
-		}
-		lnr := st.Args[0]
-		if lnr.Type != ObjStr {
-			return i.err("label name must be a string")
-		}
-		i.labelName = lnr.StrV
-		// tool.Log("label block starts: " + i.labelName)
-	case stUnless:
-		if i.ctx == ctxUnless {
-			return i.err("nested unless blocks are not supported")
-		} else if i.ctx != ctxGlobal {
-			return i.err("unexpected unless block")
-		}
-		i.ctx = ctxUnless
-		cond, err := ParseConditional(st.ArgsSrc, i.parser)
-		if err != nil {
-			return i.errOf(err)
-		}
-		f, ok := Comps[cond.Comp]
-		if !ok {
-			return i.err("unknown comparator: " + cond.Comp)
-		}
-		res, err := f(cond.Args)
-		if err != nil {
-			return i.errOf(err)
-		}
-		i.unlessCondition = res
-	}
-	return nil
-}
-
-func (i *Interpreter) RunFile(fn string) error {
-	f, err := os.Open(fn)
-	if err != nil {
-		return err
-	}
-	srcRaw, err := io.ReadAll(f)
-	if err != nil {
-		return err
-	}
-	src := string(srcRaw)
-	lines := []string{}
-	ctx := ""
-	comment := false
-	for _, c := range src {
-		if c == '\n' {
-			if len(ctx) > 0 && ctx[len(ctx)-1] == '\\' {
-				ctx = ctx[:len(ctx)-1]
-			} else {
-				if !comment {
-					if strings.HasPrefix(strings.TrimSpace(ctx), COMMENT_MULTI_BEGIN) {
-						comment = true
-						ctx = ""
-					} else {
-						lines = append(lines, ctx)
-						ctx = ""
-					}
-				} else if strings.HasSuffix(strings.TrimSpace(ctx), COMMENT_MULTI_END) {
-					comment = false
-					ctx = ""
-				}
-			}
-		} else {
-			ctx += string(c)
-		}
-	}
-	for _, l := range lines {
-		if err = i.RunLine(l); err != nil {
 			return err
 		}
+		comp, ok := Comps[condSt.Cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + condSt.Cond.Comp)
+		}
+		i.ifBlock = i.noStmt()
+		i.ifCondition, err = comp(condSt.Cond.Args)
+		if err != nil {
+			return i.errOf(err)
+		}
+		i.ctx = ctxIf
+	case "unless":
+		condSt, err := i.parser.toCond(st)
+		if err != nil {
+			return err
+		}
+		comp, ok := Comps[condSt.Cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + condSt.Cond.Comp)
+		}
+		i.unlessBlock = i.noStmt()
+		i.unlessCondition, err = comp(condSt.Cond.Args)
+		if err != nil {
+			return i.errOf(err)
+		}
+		i.ctx = ctxUnless
+	case "label":
+		i.labelName = st.Arg
+		i.ctx = ctxLabel
+	case "else":
+		return i.err("else outside if/unless block")
+	case "end":
+		return i.err("end outside block")
+	default:
+		callSt, err := i.parser.toCall(st)
+		if err != nil {
+			return err
+		}
+		f, ok := Funcs[callSt.Kw]
+		if !ok {
+			return i.err("unknown function: " + callSt.Kw)
+		}
+		return f(callSt.Args)
+	}
+	return i.err("unreachable")
+}
+
+func (i *interpreter) runInIf(st *genStmt) error {
+	switch st.Kw {
+	case "else":
+		i.elseBlock = i.noStmt()
+		i.ctx = ctxElse
+	case "end":
+		i.ctx = ctxGlobal
+		if i.ifCondition {
+			return i.runAll(i.ifBlock)
+		}
+	case "if":
+		return i.err("nested if blocks are not supported")
+	case "unless":
+		return i.err("nested unless blocks are not supported")
+	case "label":
+		return i.err("labels cannot be defined conditionally")
+	default:
+		i.ifBlock = append(i.ifBlock, st)
 	}
 	return nil
 }
 
-func (i *Interpreter) Context() string {
-	switch i.ctx {
-	case ctxIf:
-		return "if   "
-	case ctxElse:
-		return "else "
-	case ctxLabel:
-		n := i.labelName
-		if len(n) > 4 {
-			n = n[:4]
+func (i *interpreter) runInElse(st *genStmt) error {
+	switch st.Kw {
+	case "else":
+		return i.err("nested else blocks are not supported")
+	case "end":
+		i.ctx = ctxGlobal
+		if !i.ifCondition {
+			return i.runAll(i.elseBlock)
 		}
-		if len(n) < 4 {
-			for len(n) != 4 {
-				n += " "
-			}
-		}
-		return n + " "
+	case "if":
+		return i.err("nested if blocks are not supported")
+	case "unless":
+		return i.err("nested unless blocks are not supported")
+	case "label":
+		return i.err("labels cannot be defined conditionally")
+	default:
+		i.elseBlock = append(i.elseBlock, st)
 	}
-	return ""
+	return nil
 }
 
-func (i *Interpreter) errOf(err error) error {
+func (i *interpreter) runInUnless(st *genStmt) error {
+	switch st.Kw {
+	case "else":
+		return i.err("else blocks are not supported with unless yet")
+	case "end":
+		i.ctx = ctxGlobal
+		if !i.unlessCondition {
+			return i.runAll(i.unlessBlock)
+		}
+	case "if":
+		return i.err("nested if blocks are not supported")
+	case "unless":
+		return i.err("nested unless blocks are not supported")
+	case "label":
+		return i.err("labels cannot be defined conditionally")
+	default:
+		i.unlessBlock = append(i.unlessBlock, st)
+	}
+	return nil
+}
+
+func (i *interpreter) runInLabel(st *genStmt) error {
+	switch st.Kw {
+	case "end":
+		i.ctx = ctxGlobal
+		i.labelMap[i.labelName] = i.labelBlock
+	default:
+		i.unlessBlock = append(i.unlessBlock, st)
+	}
+	return nil
+}
+
+func (i *interpreter) errOf(err error) error {
 	return i.err("interpreter error: " + err.Error())
 }
 
-func (i *Interpreter) err(txt string) error {
+func (i *interpreter) err(txt string) error {
 	return errors.New("interpreter error: " + txt)
 }
 

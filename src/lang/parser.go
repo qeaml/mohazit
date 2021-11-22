@@ -13,75 +13,45 @@ func assert(cond bool, msg string) {
 	}
 }
 
-type StatementType uint8
-
-const (
-	stCall StatementType = iota
-	stSet
-	stIf
-	stElse
-	stLabel
-	stUnless
-)
-
-type Statement struct {
-	Type    StatementType
-	Func    string
-	Args    []*Object
-	ArgsSrc string
+type parser struct {
 }
 
-func (s *Statement) Repr() string {
-	strArgs := []string{}
-	for _, a := range s.Args {
-		strArgs = append(strArgs, a.Repr())
-	}
-	return s.Func + "(" + strings.Join(strArgs, "; ") + ")"
-}
-
-type Parser struct {
-}
-
-func (p *Parser) isWhitespace(c rune) bool {
+func (p *parser) isWhitespace(c rune) bool {
 	return c == ' ' || c == '\t'
 }
 
-func (p *Parser) isDigit(c byte) bool {
+func (p *parser) isDigit(c byte) bool {
 	return c >= '0' && c <= '9'
 }
 
-func (p *Parser) id(s string) string {
-	return strings.ToLower(strings.TrimSpace(s))
-}
-
-func (p *Parser) objNil() *Object {
+func (p *parser) objNil() *Object {
 	return &Object{
 		Type: ObjNil,
 	}
 }
 
-func (p *Parser) objInt(i int) *Object {
+func (p *parser) objInt(i int) *Object {
 	return &Object{
 		Type: ObjInt,
 		IntV: i,
 	}
 }
 
-func (p *Parser) objBool(b bool) *Object {
+func (p *parser) objBool(b bool) *Object {
 	return &Object{
 		Type:  ObjBool,
 		BoolV: b,
 	}
 }
 
-func (p *Parser) objStr(s string) *Object {
+func (p *parser) objStr(s string) *Object {
 	return &Object{
 		Type: ObjStr,
 		StrV: s,
 	}
 }
 
-func (p *Parser) typeOf(s string) ObjectType {
+func (p *parser) typeOf(s string) ObjectType {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return ObjNil
@@ -98,7 +68,7 @@ func (p *Parser) typeOf(s string) ObjectType {
 	return ObjStr
 }
 
-func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
+func (p *parser) parseObject(s string, t ObjectType) (*Object, error) {
 	assert(t < ObjInv, "object type invalid")
 	s = strings.TrimSpace(s)
 	switch t {
@@ -125,7 +95,7 @@ func (p *Parser) parseObject(s string, t ObjectType) (*Object, error) {
 	return p.objNil(), errors.New("could not deterime type of value: " + s)
 }
 
-func (p *Parser) parseArgs(a []string) ([]*Object, error) {
+func (p *parser) parseArgs(a []string) ([]*Object, error) {
 	tool.Log("parse args call: ", a)
 	objs := []*Object{}
 	for _, v := range a {
@@ -152,66 +122,69 @@ func (p *Parser) parseArgs(a []string) ([]*Object, error) {
 	return objs, nil
 }
 
-func (p *Parser) ParseStatement(s string) (*Statement, error) {
-	var (
-		ctx        string
-		keyword    string
-		argsRaw    = []string{}
-		hasKeyword bool
-		stype      StatementType
-		function   string
-	)
+type genStmt struct {
+	Kw  string
+	Arg string
+}
+
+func (p *parser) ParseStatement(s string) (*genStmt, error) {
+	ctx := ""
+	hasKw := false
+	kw := ""
+	// main parsing loop: for each character,
 	for _, c := range s {
-		if p.isWhitespace(c) {
-			if !hasKeyword {
-				keyword = p.id(ctx)
-				hasKeyword = true
-				ctx = ""
-			} else {
-				argsRaw = append(argsRaw, strings.TrimSpace(ctx))
-				ctx = ""
-			}
+		// if we don't have the keyword and the current char is whitespace
+		if !hasKw && p.isWhitespace(c) {
+			// then everything we've read so far is the keyword
+			kw = strings.ToLower(strings.TrimSpace(ctx))
+			hasKw = true
+			ctx = ""
 		} else {
+			// otherwise just add it to the context
 			ctx += string(c)
 		}
 	}
-	if ctx != "" {
-		if !hasKeyword {
-			keyword = p.id(ctx)
-			hasKeyword = true
-		} else {
-			argsRaw = append(argsRaw, strings.TrimSpace(ctx))
-		}
+	// keyword-only statement (else, end etc.)
+	if !hasKw {
+		kw = strings.ToLower(strings.TrimSpace(ctx))
+		hasKw = true
+		ctx = ""
 	}
-	switch keyword {
-	case "set":
-		stype = stSet
-	case "if":
-		stype = stIf
-	case "else":
-		stype = stElse
-	case "label":
-		stype = stLabel
-	case "unless":
-		stype = stUnless
-	default:
-		stype = stCall
-	}
-	if stype == stCall {
-		function = keyword
-	}
-	args, err := p.parseArgs(argsRaw)
-	if err != nil {
-		return nil, p.errOf(err)
-	}
-	return &Statement{
-		Type:    stype,
-		Func:    function,
-		Args:    args,
-		ArgsSrc: strings.Join(argsRaw, " "),
+	tool.Log("- Out: " + kw + "(" + ctx + ")")
+	return &genStmt{
+		Kw:  kw,
+		Arg: strings.TrimSpace(ctx),
 	}, nil
 }
 
-func (p *Parser) errOf(err error) error {
-	return errors.New("parser error: " + err.Error())
+type condStmt struct {
+	Kw   string
+	Cond *Conditional
+}
+
+func (p *parser) toCond(gs *genStmt) (*condStmt, error) {
+	condition, err := ParseConditional(gs.Arg, p)
+	if err != nil {
+		return nil, err
+	}
+	return &condStmt{
+		Kw:   gs.Kw,
+		Cond: condition,
+	}, nil
+}
+
+type callStmt struct {
+	Kw   string
+	Args []*Object
+}
+
+func (p *parser) toCall(gs *genStmt) (*callStmt, error) {
+	args, err := p.parseArgs([]string{gs.Arg})
+	if err != nil {
+		return nil, err
+	}
+	return &callStmt{
+		Kw:   gs.Kw,
+		Args: args,
+	}, nil
 }
