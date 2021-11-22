@@ -47,3 +47,22 @@ else
 end
 # you use the same terminator for both `if`, `else` and `label` :)
 ```
+
+you aren't stuck with only `if` though:
+
+```rb
+if this (equals) that
+else
+    say woop
+end
+# ==== INTRODUCING: THE UNLESS STATEMENT ====
+unless this (equals) that
+    say woop
+end
+# the code below won't run in the current version of mohazit, but it will eventually
+unless this (equals) that
+    say woop
+else
+    say how??????
+end
+```
