@@ -113,7 +113,9 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 				if len(out) >= 1 && !strings.HasSuffix(v, "\\") {
 					obj = out[len(out)-1]
 					if obj.Type == ObjStr {
-						obj.StrV += " " + v
+						tool.Log("parseArgs - Appending `" + v + "`")
+						obj.StrV = strings.TrimSpace(obj.StrV + " " + v)
+						tool.Log("parseArgs - Result `" + obj.StrV + "`")
 						out[len(out)-1] = obj
 					} else {
 						obj = p.objStr(v)
