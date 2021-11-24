@@ -13,6 +13,10 @@ func badType(txt string) error {
 	return fmt.Errorf("wrong argument type: %s", txt)
 }
 
+func invArgs(txt string) error {
+	return fmt.Errorf("invalid argument: %s", txt)
+}
+
 func Init() {
 	lang.Funcs = lang.FuncMap{
 		"say":           fSay,
@@ -20,7 +24,7 @@ func Init() {
 		"file-create":   fFileCreate,
 		"file-delete":   fFileDelete,
 		"file-rename":   fFileRename,
-		"file-move":     fFileMove,
+		"file-move":     fFileRename,
 		"file-copy":     fFileCopy,
 		"file-write":    fFileWrite,
 		"file-append":   fFileAppend,

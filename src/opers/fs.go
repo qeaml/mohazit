@@ -16,6 +16,10 @@ func sFilename(args []*lang.Object) (string, error) {
 	if fnObj.Type != lang.ObjStr {
 		return "", badType("filename must be string")
 	}
+	fnElems := strings.Split(fnObj.StrV, ".")
+	if strings.Contains(fnElems[len(fnElems)-1], " ") {
+		return "", invArgs("Your file's extension contains a space. Are you missing a \\ somewhere?")
+	}
 	return fnObj.StrV, nil
 }
 
@@ -125,7 +129,7 @@ func fFileAppend(args []*lang.Object) error {
 		return err
 	}
 	for _, o := range args[1:] {
-		data = append(data, ' ')
+		data = append(data, '\n')
 		data = append(data, []byte(o.String())...)
 	}
 	file, err = os.Create(fn)
