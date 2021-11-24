@@ -48,7 +48,7 @@ func ParseConditional(s string, p *parser) (*Conditional, error) {
 	if !hasComp {
 		return nil, errors.New("no comparator specified")
 	}
-	args, err := p.parseArgs(params)
+	args, err := p.parseArgs(strings.Join(params, " "))
 	if err != nil {
 		return nil, err
 	}

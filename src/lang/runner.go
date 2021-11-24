@@ -3,6 +3,7 @@ package lang
 import (
 	"errors"
 	"io"
+	"mohazit/tool"
 	"os"
 	"strings"
 )
@@ -49,11 +50,12 @@ func (r *Runner) DoFile(fn string) error {
 		if b == LINE_END {
 			line = strings.TrimSpace(ctx)
 			ctx = ""
+			tool.Log(line)
 			if !isComment {
-				if line == "" || strings.HasPrefix(line, COMMENT_SINGLE) {
-					// do nothing lol
-				} else if strings.HasPrefix(line, COMMENT_MULTI_BEGIN) {
+				if strings.HasPrefix(line, COMMENT_MULTI_BEGIN) {
 					isComment = true
+				} else if line == "" || strings.HasPrefix(line, COMMENT_SINGLE) {
+					// bruh
 				} else {
 					s, err := r.parser.ParseStatement(line)
 					if err != nil {
@@ -69,6 +71,7 @@ func (r *Runner) DoFile(fn string) error {
 					isComment = false
 				}
 			}
+			tool.Log("comment", isComment)
 		} else {
 			ctx += string(rune(b))
 		}

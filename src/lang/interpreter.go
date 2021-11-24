@@ -2,6 +2,7 @@ package lang
 
 import (
 	"errors"
+	"mohazit/tool"
 )
 
 type Context uint8
@@ -49,6 +50,7 @@ func (i *interpreter) noStmt() []*genStmt {
 }
 
 func (i *interpreter) RunStatement(st *genStmt) error {
+	// TODO(qeaml): reference processing
 	switch i.ctx {
 	case ctxGlobal:
 		return i.runGlobally(st)
@@ -66,6 +68,7 @@ func (i *interpreter) RunStatement(st *genStmt) error {
 }
 
 func (i *interpreter) runGlobally(st *genStmt) error {
+	tool.Log(st.Kw)
 	switch st.Kw {
 	case "if":
 		condSt, err := i.parser.toCond(st)
@@ -82,6 +85,7 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 			return i.errOf(err)
 		}
 		i.ctx = ctxIf
+		return nil
 	case "unless":
 		condSt, err := i.parser.toCond(st)
 		if err != nil {
@@ -97,13 +101,24 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 			return i.errOf(err)
 		}
 		i.ctx = ctxUnless
+		return nil
 	case "label":
 		i.labelName = st.Arg
 		i.ctx = ctxLabel
+		return nil
 	case "else":
 		return i.err("else outside if/unless block")
 	case "end":
 		return i.err("end outside block")
+	case "goto":
+		if len(st.Arg) < 1 {
+			return i.err("must prove label name to go to")
+		}
+		label, ok := i.labelMap[st.Arg]
+		if !ok {
+			return i.err("unknown label: " + st.Arg)
+		}
+		return i.runAll(label)
 	default:
 		callSt, err := i.parser.toCall(st)
 		if err != nil {
@@ -115,7 +130,6 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		}
 		return f(callSt.Args)
 	}
-	return i.err("unreachable")
 }
 
 func (i *interpreter) runInIf(st *genStmt) error {
@@ -123,6 +137,7 @@ func (i *interpreter) runInIf(st *genStmt) error {
 	case "else":
 		i.elseBlock = i.noStmt()
 		i.ctx = ctxElse
+		return nil
 	case "end":
 		i.ctx = ctxGlobal
 		if i.ifCondition {
@@ -148,6 +163,8 @@ func (i *interpreter) runInElse(st *genStmt) error {
 		i.ctx = ctxGlobal
 		if !i.ifCondition {
 			return i.runAll(i.elseBlock)
+		} else {
+			return i.runAll(i.ifBlock)
 		}
 	case "if":
 		return i.err("nested if blocks are not supported")

@@ -9,6 +9,7 @@ const (
 	ObjStr
 	ObjInt
 	ObjBool
+	ObjRef
 	ObjInv
 )
 
@@ -17,6 +18,7 @@ type Object struct {
 	StrV  string
 	IntV  int
 	BoolV bool
+	RefV  string
 }
 
 func (o *Object) Repr() string {
@@ -29,6 +31,8 @@ func (o *Object) Repr() string {
 		return fmt.Sprintf("[Int %d]", o.IntV)
 	case ObjBool:
 		return fmt.Sprintf("[Bool %t]", o.BoolV)
+	case ObjRef:
+		return "[Ref \\(" + o.StrV + ")]"
 	}
 	return "?"
 }

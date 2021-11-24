@@ -53,8 +53,8 @@ func (p *parser) objStr(s string) *Object {
 
 func (p *parser) typeOf(s string) ObjectType {
 	s = strings.TrimSpace(s)
-	if s == "" {
-		return ObjNil
+	if strings.HasPrefix(s, "\\(") {
+		return ObjRef
 	}
 	switch strings.ToLower(s) {
 	case "nil":
@@ -95,31 +95,47 @@ func (p *parser) parseObject(s string, t ObjectType) (*Object, error) {
 	return p.objNil(), errors.New("could not deterime type of value: " + s)
 }
 
-func (p *parser) parseArgs(a []string) ([]*Object, error) {
-	tool.Log("parse args call: ", a)
-	objs := []*Object{}
-	for _, v := range a {
-		t := p.typeOf(v)
-		if len(objs) > 0 && t == ObjStr {
-			prev := objs[len(objs)-1]
-			if prev.Type == ObjStr {
-				if strings.HasSuffix(prev.StrV, "\\") {
-					prev.StrV = strings.TrimSpace(strings.TrimSuffix(prev.StrV, "\\"))
-					objs[len(objs)-1] = prev
-				} else {
-					prev.StrV += " " + v
-					objs[len(objs)-1] = prev
-					continue
-				}
-			}
-		}
-		o, err := p.parseObject(v, t)
-		if err != nil {
-			return []*Object{}, err
-		}
-		objs = append(objs, o)
+func (p *parser) parseArgs(a string) ([]*Object, error) {
+	// TODO(qeaml): reference parsing
+	out := []*Object{}
+	if a == "" {
+		return out, nil
 	}
-	return objs, nil
+	ctx := ""
+	a += " "
+	var obj *Object
+	for _, c := range a {
+		if p.isWhitespace(c) {
+			v := strings.TrimSpace(ctx)
+			t := p.typeOf(v)
+			switch t {
+			case ObjStr:
+				if len(out) >= 1 && !strings.HasSuffix(v, "\\") {
+					obj = out[len(out)-1]
+					if obj.Type == ObjStr {
+						obj.StrV += " " + v
+						out[len(out)-1] = obj
+					} else {
+						obj = p.objStr(v)
+						out = append(out, obj)
+					}
+				} else {
+					obj = p.objStr(strings.TrimSpace(strings.TrimSuffix(v, "\\")))
+					out = append(out, obj)
+				}
+			default:
+				obj, err := p.parseObject(v, t)
+				if err != nil {
+					return nil, err
+				}
+				out = append(out, obj)
+			}
+			ctx = ""
+		} else {
+			ctx += string(c)
+		}
+	}
+	return out, nil
 }
 
 type genStmt struct {
@@ -179,8 +195,7 @@ type callStmt struct {
 }
 
 func (p *parser) toCall(gs *genStmt) (*callStmt, error) {
-	// TODO(qeaml): new and improved argument parsing
-	args, err := p.parseArgs([]string{gs.Arg})
+	args, err := p.parseArgs(gs.Arg)
 	if err != nil {
 		return nil, err
 	}
