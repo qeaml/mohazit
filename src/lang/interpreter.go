@@ -68,7 +68,7 @@ func (i *interpreter) RunStatement(st *genStmt) error {
 }
 
 func (i *interpreter) runGlobally(st *genStmt) error {
-	tool.Log(st.Kw)
+	tool.Log("runGlobally - Keyword - " + st.Kw)
 	switch st.Kw {
 	case "if":
 		condSt, err := i.parser.toCond(st)

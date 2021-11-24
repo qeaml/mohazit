@@ -50,7 +50,7 @@ func (r *Runner) DoFile(fn string) error {
 		if b == LINE_END {
 			line = strings.TrimSpace(ctx)
 			ctx = ""
-			tool.Log(line)
+			tool.Log("DoFile - Line - " + line)
 			if !isComment {
 				if strings.HasPrefix(line, COMMENT_MULTI_BEGIN) {
 					isComment = true
@@ -71,7 +71,7 @@ func (r *Runner) DoFile(fn string) error {
 					isComment = false
 				}
 			}
-			tool.Log("comment", isComment)
+			tool.Log("DoFile - Comment -", isComment)
 		} else {
 			ctx += string(rune(b))
 		}

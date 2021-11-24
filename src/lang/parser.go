@@ -168,7 +168,7 @@ func (p *parser) ParseStatement(s string) (*genStmt, error) {
 		hasKw = true
 		ctx = ""
 	}
-	tool.Log("- Out: " + kw + "(" + ctx + ")")
+	tool.Log("ParseStatement - Out: " + kw + "(" + ctx + ")")
 	return &genStmt{
 		Kw:  kw,
 		Arg: strings.TrimSpace(ctx),

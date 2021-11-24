@@ -11,11 +11,11 @@ import (
 
 func cEquals(objs []*lang.Object) (bool, error) {
 	for _, o := range objs {
-		tool.Log(o.String())
+		tool.Log("cEquals - Object - " + o.String())
 	}
 	for _, a := range objs {
 		for _, b := range objs {
-			tool.Log("comparing:", a.Repr(), b.Repr())
+			tool.Log("cEquals - Comparing -", a.Repr(), b.Repr())
 			if a.Type != b.Type {
 				return false, nil
 			}
