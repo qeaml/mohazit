@@ -2,6 +2,7 @@ package lang
 
 import (
 	"errors"
+	"fmt"
 	"mohazit/tool"
 )
 
@@ -119,6 +120,44 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 			return i.err("unknown label: " + st.Arg)
 		}
 		return i.runAll(label)
+	case "assert":
+		condSt, err := i.parser.toCond(st)
+		if err != nil {
+			return err
+		}
+		comp, ok := Comps[condSt.Cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + condSt.Cond.Comp)
+		}
+		res, err := comp(condSt.Cond.Args)
+		if err != nil {
+			return err
+		}
+		if !res {
+			fmt.Println("FAIL " + st.Arg)
+			return i.err("assertion failed")
+		}
+		fmt.Println("PASS " + st.Arg)
+		return nil
+	case "assert-not":
+		condSt, err := i.parser.toCond(st)
+		if err != nil {
+			return err
+		}
+		comp, ok := Comps[condSt.Cond.Comp]
+		if !ok {
+			return i.err("unknown comparator: " + condSt.Cond.Comp)
+		}
+		res, err := comp(condSt.Cond.Args)
+		if err != nil {
+			return err
+		}
+		if res {
+			fmt.Println("FAIL [Not] " + st.Arg)
+			return i.err("assertion didn't fail")
+		}
+		fmt.Println("PASS [Not] " + st.Arg)
+		return nil
 	default:
 		callSt, err := i.parser.toCall(st)
 		if err != nil {

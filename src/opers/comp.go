@@ -10,9 +10,6 @@ import (
 )
 
 func cEquals(objs []*lang.Object) (bool, error) {
-	for _, o := range objs {
-		tool.Log("cEquals - Object - " + o.String())
-	}
 	for _, a := range objs {
 		for _, b := range objs {
 			tool.Log("cEquals - Comparing -", a.Repr(), b.Repr())
@@ -35,12 +32,36 @@ func cEquals(objs []*lang.Object) (bool, error) {
 			}
 		}
 	}
+	tool.Log("cEquals - Result - true")
 	return true, nil
 }
 
 func cNotEquals(objs []*lang.Object) (bool, error) {
 	eq, err := cEquals(objs)
 	return !eq, err
+}
+
+func cLike(objs []*lang.Object) (bool, error) {
+	if len(objs) < 2 {
+		return false, needArgs("need at least 2 arguments to compare")
+	}
+	// target type that we will try to convert to
+	tt := objs[0].Type
+	// converted objects we will pass to cEquals
+	co := []*lang.Object{objs[0]}
+	for _, o := range objs[1:] {
+		if o.Type == tt {
+			co = append(co, o)
+			tool.Log("cLike - Type match -", o.Type, tt)
+		} else {
+			conv, ok := o.TryConvert(tt)
+			if !ok {
+				return false, badType("value " + o.Repr() + " could not be converted for comparison")
+			}
+			co = append(co, conv)
+		}
+	}
+	return cEquals(co)
 }
 
 func cChance(objs []*lang.Object) (bool, error) {

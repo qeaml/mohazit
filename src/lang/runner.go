@@ -1,7 +1,7 @@
 package lang
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"mohazit/tool"
 	"os"
@@ -19,6 +19,7 @@ type Runner struct {
 	interpreter *interpreter
 	parser      *parser
 	name        string
+	line        int
 }
 
 func NewRunner(name string) *Runner {
@@ -31,6 +32,7 @@ func NewRunner(name string) *Runner {
 			labelMap: make(map[string][]*genStmt),
 		},
 		name: name,
+		line: 0,
 	}
 }
 
@@ -48,6 +50,7 @@ func (r *Runner) DoFile(fn string) error {
 	isComment := false
 	for _, b := range src {
 		if b == LINE_END {
+			r.line++
 			line = strings.TrimSpace(ctx)
 			ctx = ""
 			tool.Log("DoFile - Line - " + line)
@@ -80,5 +83,5 @@ func (r *Runner) DoFile(fn string) error {
 }
 
 func (r *Runner) errOf(err error) error {
-	return errors.New("error in " + r.name + ":\n\t" + err.Error())
+	return fmt.Errorf("%s:%d: %s", r.name, r.line, err.Error())
 }

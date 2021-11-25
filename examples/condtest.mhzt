@@ -28,3 +28,12 @@ if 10 10 (equals) 10 10 10 10
 else
     say 10 != 10 != 10 != 10 != 10 != 10 : Wrong
 end
+
+# assertions!
+assert     10    (equals) 10 10 10 10 10 10 10 10
+assert     hello (not-equals) world
+assert     -10   (not-equals) 10
+
+# unlike (equals) a type conversion will occur here
+assert     1     (like) true
+assert-not yes   (like) no

@@ -40,6 +40,8 @@ func Init() {
 		"=":             cEquals,
 		"not-equals":    cNotEquals,
 		"<>":            cNotEquals,
+		"like":          cLike,
+		"~":             cLike,
 		"chance":        cChance,
 		"file-exists":   cFileExists,
 		"dir-exists":    cDirExists,

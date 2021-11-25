@@ -53,6 +53,9 @@ func (p *parser) objStr(s string) *Object {
 
 func (p *parser) typeOf(s string) ObjectType {
 	s = strings.TrimSpace(s)
+	if len(s) == 0 {
+		panic("invalid value!")
+	}
 	if strings.HasPrefix(s, "\\(") {
 		return ObjRef
 	}
