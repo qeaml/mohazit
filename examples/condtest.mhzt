@@ -1,39 +1,45 @@
 #: this is a strict comparison - if the types are not the same, then the objects
-   CANNOT be equal ##
+ CANNOT be equal ##
 if 10 (equals) 11
-    say 10 == 11 : Wrong
+ say 10 == 11 : Wrong
 end
 
 if 10 (not-equals) 11
-    say 10 != 11 : OK
+ say 10 != 11 : OK
 else
-    say 10 == 11 : Wrong
+ say 10 == 11 : Wrong
 end
 
 if hello (not-equals) world
-    say hello != world : OK
+ say hello != world : OK
 else
-    say hello == world : Wrong
+ say hello == world : Wrong
 end
 
 unless true (equals) false
-    say true != false : OK
+ say true != false : OK
+end
+
+unless true (equals) true
+ say true != true : Wrong
+else
+ say true == true : OK
 end
 
 #: you can compare more than one object at a time:
-  this compares all the arguments against each other. if at least one pair of
-  these arguments is not equal - the result will be false. ##
+ this compares all the arguments against each other. if at least one pair of
+ these arguments is not equal - the result will be false. ##
 if 10 10 (equals) 10 10 10 10
-    say 10 == 10 == 10 == 10 == 10 == 10 : OK
+ say 10 == 10 == 10 == 10 == 10 == 10 : OK
 else
-    say 10 != 10 != 10 != 10 != 10 != 10 : Wrong
+ say 10 != 10 != 10 != 10 != 10 != 10 : Wrong
 end
 
 # assertions!
-assert     10    (equals) 10 10 10 10 10 10 10 10
-assert     hello (not-equals) world
-assert     -10   (not-equals) 10
+assert 10 (equals) 10 10 10 10 10 10 10 10
+assert hello (not-equals) world
+assert -10 (not-equals) 10
 
 # unlike (equals) a type conversion will occur here
-assert     1     (like) true
-assert-not yes   (like) no
+assert 1 (like) true
+assert-not yes (like) no

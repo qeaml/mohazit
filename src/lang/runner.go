@@ -3,7 +3,6 @@ package lang
 import (
 	"fmt"
 	"io"
-	"mohazit/tool"
 	"os"
 	"strings"
 )
@@ -53,7 +52,6 @@ func (r *Runner) DoFile(fn string) error {
 			r.line++
 			line = strings.TrimSpace(ctx)
 			ctx = ""
-			tool.Log("DoFile - Line - " + line)
 			if !isComment {
 				if strings.HasPrefix(line, COMMENT_MULTI_BEGIN) {
 					isComment = true
@@ -74,7 +72,6 @@ func (r *Runner) DoFile(fn string) error {
 					isComment = false
 				}
 			}
-			tool.Log("DoFile - Comment -", isComment)
 		} else {
 			ctx += string(rune(b))
 		}

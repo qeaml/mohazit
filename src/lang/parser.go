@@ -2,7 +2,6 @@ package lang
 
 import (
 	"errors"
-	"mohazit/tool"
 	"strconv"
 	"strings"
 )
@@ -110,15 +109,16 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 	for _, c := range a {
 		if p.isWhitespace(c) {
 			v := strings.TrimSpace(ctx)
+			if len(v) == 0 {
+				continue
+			}
 			t := p.typeOf(v)
 			switch t {
 			case ObjStr:
 				if len(out) >= 1 && !strings.HasSuffix(v, "\\") {
 					obj = out[len(out)-1]
 					if obj.Type == ObjStr {
-						tool.Log("parseArgs - Appending `" + v + "`")
 						obj.StrV = strings.TrimSpace(obj.StrV + " " + v)
-						tool.Log("parseArgs - Result `" + obj.StrV + "`")
 						out[len(out)-1] = obj
 					} else {
 						obj = p.objStr(v)
@@ -171,7 +171,6 @@ func (p *parser) ParseStatement(s string) (*genStmt, error) {
 		hasKw = true
 		ctx = ""
 	}
-	tool.Log("ParseStatement - Out: " + kw + "(" + ctx + ")")
 	return &genStmt{
 		Kw:  kw,
 		Arg: strings.TrimSpace(ctx),

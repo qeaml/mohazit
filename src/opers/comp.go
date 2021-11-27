@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"math/rand"
 	"mohazit/lang"
-	"mohazit/tool"
 	"time"
 )
 
 func cEquals(objs []*lang.Object) (bool, error) {
 	for _, a := range objs {
 		for _, b := range objs {
-			tool.Log("cEquals - Comparing -", a.Repr(), b.Repr())
 			if a.Type != b.Type {
 				return false, nil
 			}
@@ -32,7 +30,6 @@ func cEquals(objs []*lang.Object) (bool, error) {
 			}
 		}
 	}
-	tool.Log("cEquals - Result - true")
 	return true, nil
 }
 
@@ -52,7 +49,6 @@ func cLike(objs []*lang.Object) (bool, error) {
 	for _, o := range objs[1:] {
 		if o.Type == tt {
 			co = append(co, o)
-			tool.Log("cLike - Type match -", o.Type, tt)
 		} else {
 			conv, ok := o.TryConvert(tt)
 			if !ok {

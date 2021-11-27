@@ -3,7 +3,6 @@ package lang
 import (
 	"errors"
 	"fmt"
-	"mohazit/tool"
 )
 
 type Context uint8
@@ -17,16 +16,14 @@ const (
 )
 
 type interpreter struct {
-	parser          *parser
-	ctx             Context
-	ifCondition     bool
-	ifBlock         []*genStmt
-	elseBlock       []*genStmt
-	unlessCondition bool
-	unlessBlock     []*genStmt
-	labelName       string
-	labelBlock      []*genStmt
-	labelMap        map[string][]*genStmt
+	parser     *parser
+	ctx        Context
+	cond       bool
+	condBlock  []*genStmt
+	elseBlock  []*genStmt
+	labelName  string
+	labelBlock []*genStmt
+	labelMap   map[string][]*genStmt
 }
 
 func NewInterpreter(p *parser) *interpreter {
@@ -69,7 +66,6 @@ func (i *interpreter) RunStatement(st *genStmt) error {
 }
 
 func (i *interpreter) runGlobally(st *genStmt) error {
-	tool.Log("runGlobally - Keyword - " + st.Kw)
 	switch st.Kw {
 	case "if":
 		condSt, err := i.parser.toCond(st)
@@ -80,8 +76,8 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		if !ok {
 			return i.err("unknown comparator: " + condSt.Cond.Comp)
 		}
-		i.ifBlock = i.noStmt()
-		i.ifCondition, err = comp(condSt.Cond.Args)
+		i.condBlock = i.noStmt()
+		i.cond, err = comp(condSt.Cond.Args)
 		if err != nil {
 			return i.errOf(err)
 		}
@@ -96,11 +92,12 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		if !ok {
 			return i.err("unknown comparator: " + condSt.Cond.Comp)
 		}
-		i.unlessBlock = i.noStmt()
-		i.unlessCondition, err = comp(condSt.Cond.Args)
+		i.condBlock = i.noStmt()
+		i.cond, err = comp(condSt.Cond.Args)
 		if err != nil {
 			return i.errOf(err)
 		}
+		i.cond = !i.cond
 		i.ctx = ctxUnless
 		return nil
 	case "label":
@@ -179,8 +176,8 @@ func (i *interpreter) runInIf(st *genStmt) error {
 		return nil
 	case "end":
 		i.ctx = ctxGlobal
-		if i.ifCondition {
-			return i.runAll(i.ifBlock)
+		if i.cond {
+			return i.runAll(i.condBlock)
 		}
 	case "if":
 		return i.err("nested if blocks are not supported")
@@ -189,7 +186,7 @@ func (i *interpreter) runInIf(st *genStmt) error {
 	case "label":
 		return i.err("labels cannot be defined conditionally")
 	default:
-		i.ifBlock = append(i.ifBlock, st)
+		i.condBlock = append(i.condBlock, st)
 	}
 	return nil
 }
@@ -200,10 +197,10 @@ func (i *interpreter) runInElse(st *genStmt) error {
 		return i.err("nested else blocks are not supported")
 	case "end":
 		i.ctx = ctxGlobal
-		if !i.ifCondition {
+		if !i.cond {
 			return i.runAll(i.elseBlock)
 		} else {
-			return i.runAll(i.ifBlock)
+			return i.runAll(i.condBlock)
 		}
 	case "if":
 		return i.err("nested if blocks are not supported")
@@ -220,11 +217,12 @@ func (i *interpreter) runInElse(st *genStmt) error {
 func (i *interpreter) runInUnless(st *genStmt) error {
 	switch st.Kw {
 	case "else":
-		return i.err("else blocks are not supported with unless yet")
+		i.ctx = ctxElse
+		i.elseBlock = i.noStmt()
 	case "end":
 		i.ctx = ctxGlobal
-		if !i.unlessCondition {
-			return i.runAll(i.unlessBlock)
+		if i.cond {
+			return i.runAll(i.condBlock)
 		}
 	case "if":
 		return i.err("nested if blocks are not supported")
@@ -233,7 +231,7 @@ func (i *interpreter) runInUnless(st *genStmt) error {
 	case "label":
 		return i.err("labels cannot be defined conditionally")
 	default:
-		i.unlessBlock = append(i.unlessBlock, st)
+		i.condBlock = append(i.condBlock, st)
 	}
 	return nil
 }
@@ -244,7 +242,7 @@ func (i *interpreter) runInLabel(st *genStmt) error {
 		i.ctx = ctxGlobal
 		i.labelMap[i.labelName] = i.labelBlock
 	default:
-		i.unlessBlock = append(i.unlessBlock, st)
+		i.labelBlock = append(i.labelBlock, st)
 	}
 	return nil
 }
