@@ -208,3 +208,39 @@ func (p *parser) toCall(gs *genStmt) (*callStmt, error) {
 		Args: args,
 	}, nil
 }
+
+type varStmt struct {
+	name  string
+	value *Object
+}
+
+func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
+	name := ""
+	hasName := false
+	valueRaw := ""
+	for _, c := range gs.Arg {
+		if !hasName {
+			if c == '=' {
+				hasName = true
+				continue
+			}
+			name += string(c)
+		} else {
+			valueRaw += string(c)
+		}
+	}
+	if !hasName {
+		return nil, errors.New("variables must have a value")
+	}
+	values, err := p.parseArgs(valueRaw)
+	if err != nil {
+		return nil, err
+	}
+	if len(values) > 1 {
+		return nil, errors.New("variables can only have 1 value")
+	}
+	return &varStmt{
+		name:  strings.ToLower(strings.TrimSpace(name)),
+		value: values[0],
+	}, nil
+}

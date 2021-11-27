@@ -19,3 +19,5 @@ else
 	say so, you sadly do not win
 	goto lose
 end
+var hello = world
+dump-var hello

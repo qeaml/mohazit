@@ -24,12 +24,14 @@ type interpreter struct {
 	labelName  string
 	labelBlock []*genStmt
 	labelMap   map[string][]*genStmt
+	vars       map[string]*Object
 }
 
 func NewInterpreter(p *parser) *interpreter {
 	return &interpreter{
 		parser:   p,
 		labelMap: make(map[string][]*genStmt),
+		vars:     make(map[string]*Object),
 	}
 }
 
@@ -154,6 +156,16 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 			return i.err("assertion didn't fail")
 		}
 		fmt.Println("PASS [Not] " + st.Arg)
+		return nil
+	case "set", "var":
+		varSt, err := i.parser.toVar(st)
+		if err != nil {
+			return err
+		}
+		i.vars[varSt.name] = varSt.value
+		return nil
+	case "dump-var":
+		fmt.Println(st.Arg, "=", i.vars[st.Arg].Repr())
 		return nil
 	default:
 		callSt, err := i.parser.toCall(st)

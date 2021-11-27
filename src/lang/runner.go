@@ -29,6 +29,7 @@ func NewRunner(name string) *Runner {
 			parser:   p,
 			ctx:      ctxGlobal,
 			labelMap: make(map[string][]*genStmt),
+			vars:     make(map[string]*Object),
 		},
 		name: name,
 		line: 0,
