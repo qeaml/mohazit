@@ -129,8 +129,8 @@ func fFileAppend(args []*lang.Object) error {
 		return err
 	}
 	for _, o := range args[1:] {
-		data = append(data, '\n')
 		data = append(data, []byte(o.String())...)
+		data = append(data, '\n')
 	}
 	file, err = os.Create(fn)
 	if err != nil {
