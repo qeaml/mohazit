@@ -12,15 +12,13 @@ set num = limited-rng 10
 # ask the user for a number
 set guess = ask-number
 # compare
-if `num` (equals) `guess`
+# yes, i know that this doesn't look that good; i'm working on it
+if \(num) (equals) \(guess)
     # that was a good guess!
     say Congratulations! You guessed the number!
 else
     # well, better luck next time
-    say Uh-oh! That's not correct. The number was:
-    # could add templating or whatever it's called, but this is realistically
-    # what it will look like in the first release
-    say-var num
+    say Uh-oh! That's not correct. The number was: \(num)
 end
 ```
 
@@ -39,18 +37,25 @@ label lower
     goto bye
 end
 
-set num ask-number
-if `num` (greater) 10
+set num = ask-number
+set target = value 10
+if \(num) (greater) \(target)
     goto greater
 else
     goto lower
 end
 # you use the same terminator for both `if`, `else` and `label` :)
+
+label
+    say Goodbye!
+    exit
+end
 ```
 
 you aren't stuck with only `if` though:
 
 ```rb
+# bruh
 if this (equals) that
 else
     say woop
@@ -59,7 +64,7 @@ end
 unless this (equals) that
     say woop
 end
-# the code below won't run in the current version of mohazit, but it will eventually
+# you can use else here too
 unless this (equals) that
     say woop
 else
