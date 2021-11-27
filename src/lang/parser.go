@@ -179,18 +179,77 @@ func (p *parser) ParseStatement(s string) (*genStmt, error) {
 
 type condStmt struct {
 	Kw   string
-	Cond *Conditional
+	Comp string
+	Args []*Object
 }
 
-func (p *parser) toCond(gs *genStmt) (*condStmt, error) {
-	condition, err := ParseConditional(gs.Arg, p)
+func (p *parser) toCond(gs *genStmt, vars map[string]*Object) (*condStmt, error) {
+	comp, args, err := p.parseConditional(gs.Arg)
 	if err != nil {
 		return nil, err
 	}
+	finalArgs := []*Object{}
+	for _, a := range args {
+		if a.Type == ObjRef {
+			val, ok := vars[a.RefV]
+			if !ok {
+				return nil, errors.New("unknown variable: " + a.RefV)
+			}
+			finalArgs = append(finalArgs, val)
+		} else {
+			finalArgs = append(finalArgs, a)
+		}
+	}
 	return &condStmt{
 		Kw:   gs.Kw,
-		Cond: condition,
+		Comp: comp,
+		Args: finalArgs,
 	}, nil
+}
+
+func (p *parser) parseConditional(s string) (string, []*Object, error) {
+	ctx := ""
+	params := []string{}
+	hasParams := false
+	comp := ""
+	hasComp := false
+	for _, c := range s {
+		if hasComp || !hasParams {
+			if c == '(' {
+				if len(params) >= 1 && (p.typeOf(params[len(params)-1]) == ObjStr) {
+					params = append(params, "\\")
+				}
+				hasParams = true
+			} else if c == ' ' {
+				a := strings.TrimSpace(ctx)
+				if len(a) == 0 {
+					continue
+				}
+				params = append(params, a)
+				ctx = ""
+			} else {
+				ctx += string(c)
+			}
+		} else {
+			if c == ')' {
+				comp = strings.ToLower(strings.TrimSpace(comp))
+				hasComp = true
+			} else {
+				comp += string(c)
+			}
+		}
+	}
+	if len(strings.TrimSpace(ctx)) != 0 && hasComp {
+		params = append(params, strings.TrimSpace(ctx))
+	}
+	if !hasComp {
+		return "", nil, errors.New("no comparator specified")
+	}
+	args, err := p.parseArgs(strings.Join(params, " "))
+	if err != nil {
+		return "", nil, err
+	}
+	return comp, args, nil
 }
 
 type callStmt struct {
@@ -198,14 +257,26 @@ type callStmt struct {
 	Args []*Object
 }
 
-func (p *parser) toCall(gs *genStmt) (*callStmt, error) {
+func (p *parser) toCall(gs *genStmt, vars map[string]*Object) (*callStmt, error) {
 	args, err := p.parseArgs(gs.Arg)
 	if err != nil {
 		return nil, err
 	}
+	finalArgs := []*Object{}
+	for _, a := range args {
+		if a.Type == ObjRef {
+			val, ok := vars[a.RefV]
+			if !ok {
+				return nil, errors.New("unknown variable: " + a.RefV)
+			}
+			finalArgs = append(finalArgs, val)
+		} else {
+			finalArgs = append(finalArgs, a)
+		}
+	}
 	return &callStmt{
 		Kw:   gs.Kw,
-		Args: args,
+		Args: finalArgs,
 	}, nil
 }
 

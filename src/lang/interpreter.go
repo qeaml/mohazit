@@ -50,7 +50,7 @@ func (i *interpreter) noStmt() []*genStmt {
 }
 
 func (i *interpreter) RunStatement(st *genStmt) error {
-	// TODO(qeaml): reference processing
+	// TODO(qeaml): test reference testing, once parsing works 100%
 	switch i.ctx {
 	case ctxGlobal:
 		return i.runGlobally(st)
@@ -69,38 +69,26 @@ func (i *interpreter) RunStatement(st *genStmt) error {
 
 func (i *interpreter) runGlobally(st *genStmt) error {
 	switch st.Kw {
-	case "if":
-		condSt, err := i.parser.toCond(st)
+	case "if", "unless":
+		condSt, err := i.parser.toCond(st, i.vars)
 		if err != nil {
 			return err
 		}
-		comp, ok := Comps[condSt.Cond.Comp]
+		comp, ok := Comps[condSt.Comp]
 		if !ok {
-			return i.err("unknown comparator: " + condSt.Cond.Comp)
+			return i.err("unknown comparator: " + condSt.Comp)
 		}
 		i.condBlock = i.noStmt()
-		i.cond, err = comp(condSt.Cond.Args)
+		i.cond, err = comp(condSt.Args)
 		if err != nil {
 			return i.errOf(err)
 		}
-		i.ctx = ctxIf
-		return nil
-	case "unless":
-		condSt, err := i.parser.toCond(st)
-		if err != nil {
-			return err
+		if st.Kw == "if" {
+			i.ctx = ctxIf
+		} else if st.Kw == "unless" {
+			i.ctx = ctxUnless
+			i.cond = !i.cond
 		}
-		comp, ok := Comps[condSt.Cond.Comp]
-		if !ok {
-			return i.err("unknown comparator: " + condSt.Cond.Comp)
-		}
-		i.condBlock = i.noStmt()
-		i.cond, err = comp(condSt.Cond.Args)
-		if err != nil {
-			return i.errOf(err)
-		}
-		i.cond = !i.cond
-		i.ctx = ctxUnless
 		return nil
 	case "label":
 		i.labelName = st.Arg
@@ -120,15 +108,15 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		}
 		return i.runAll(label)
 	case "assert":
-		condSt, err := i.parser.toCond(st)
+		condSt, err := i.parser.toCond(st, i.vars)
 		if err != nil {
 			return err
 		}
-		comp, ok := Comps[condSt.Cond.Comp]
+		comp, ok := Comps[condSt.Comp]
 		if !ok {
-			return i.err("unknown comparator: " + condSt.Cond.Comp)
+			return i.err("unknown comparator: " + condSt.Comp)
 		}
-		res, err := comp(condSt.Cond.Args)
+		res, err := comp(condSt.Args)
 		if err != nil {
 			return err
 		}
@@ -139,15 +127,15 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		fmt.Println("PASS " + st.Arg)
 		return nil
 	case "assert-not":
-		condSt, err := i.parser.toCond(st)
+		condSt, err := i.parser.toCond(st, i.vars)
 		if err != nil {
 			return err
 		}
-		comp, ok := Comps[condSt.Cond.Comp]
+		comp, ok := Comps[condSt.Comp]
 		if !ok {
-			return i.err("unknown comparator: " + condSt.Cond.Comp)
+			return i.err("unknown comparator: " + condSt.Comp)
 		}
-		res, err := comp(condSt.Cond.Args)
+		res, err := comp(condSt.Args)
 		if err != nil {
 			return err
 		}
@@ -168,7 +156,7 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		fmt.Println(st.Arg, "=", i.vars[st.Arg].Repr())
 		return nil
 	default:
-		callSt, err := i.parser.toCall(st)
+		callSt, err := i.parser.toCall(st, i.vars)
 		if err != nil {
 			return err
 		}
