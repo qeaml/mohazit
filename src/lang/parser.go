@@ -55,7 +55,7 @@ func (p *parser) typeOf(s string) ObjectType {
 	if len(s) == 0 {
 		panic("invalid value!")
 	}
-	if strings.HasPrefix(s, "\\(") {
+	if strings.HasPrefix(s, "{") {
 		return ObjRef
 	}
 	switch strings.ToLower(s) {
@@ -104,12 +104,25 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 		return out, nil
 	}
 	ctx := ""
+	inRef := false
+	ref := ""
 	a += " "
 	var obj *Object
 	for _, c := range a {
 		if p.isWhitespace(c) {
 			v := strings.TrimSpace(ctx)
 			if len(v) == 0 {
+				continue
+			}
+			if inRef {
+				if strings.HasSuffix(v, "}") {
+					ref += string(c) + strings.TrimSuffix(v, "}")
+					out = append(out, &Object{Type: ObjRef, RefV: ref})
+					inRef = false
+				} else {
+					ref += string(c) + v
+				}
+				ctx = ""
 				continue
 			}
 			t := p.typeOf(v)
@@ -127,6 +140,14 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 				} else {
 					obj = p.objStr(strings.TrimSpace(strings.TrimSuffix(v, "\\")))
 					out = append(out, obj)
+				}
+			case ObjRef:
+				ref = v[1:]
+				if strings.HasSuffix(v, "}") {
+					ref = strings.TrimSuffix(ref, "}")
+					out = append(out, &Object{Type: ObjRef, RefV: ref})
+				} else {
+					inRef = true
 				}
 			default:
 				obj, err := p.parseObject(v, t)
@@ -215,7 +236,7 @@ func (p *parser) parseConditional(s string) (string, []*Object, error) {
 	hasComp := false
 	for _, c := range s {
 		if hasComp || !hasParams {
-			if c == '(' {
+			if c == '[' {
 				if len(params) >= 1 && (p.typeOf(params[len(params)-1]) == ObjStr) {
 					params = append(params, "\\")
 				}
@@ -231,7 +252,7 @@ func (p *parser) parseConditional(s string) (string, []*Object, error) {
 				ctx += string(c)
 			}
 		} else {
-			if c == ')' {
+			if c == ']' {
 				comp = strings.ToLower(strings.TrimSpace(comp))
 				hasComp = true
 			} else {

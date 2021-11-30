@@ -10,7 +10,7 @@ label lose
 	say Oh well this is sad...
    say You lost
 end
-if (chance)
+if [chance]
 	say that is ok
 	say how about you win now
 	goto win
@@ -19,5 +19,8 @@ else
 	say so, you sadly do not win
 	goto lose
 end
-var hello = world
-dump-var hello
+var who to welcome = world
+say welcome, {who to welcome}
+if {who to welcome} [equals] world
+	say yooooooo
+end
