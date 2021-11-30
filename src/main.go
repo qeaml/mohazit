@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mohazit/lang"
 	"mohazit/lib"
+	"mohazit/tool"
 	"os"
 	"strings"
 )
@@ -12,6 +13,7 @@ import (
 func main() {
 	lib.Load()
 	if len(os.Args) <= 1 {
+		fmt.Printf("Mohazit %s%d\n\n", tool.Version, tool.Iteration)
 		r := lang.NewRunner("REPL")
 		input := bufio.NewReader(os.Stdin)
 		for {
