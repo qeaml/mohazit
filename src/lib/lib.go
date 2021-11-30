@@ -15,6 +15,11 @@ func Load() {
 		"file-create": fFileCreate,
 		"file-delete": fFileDelete,
 		"file-rename": fFileRename,
+		"file-list":   fFileList,
+		"dir":         fFileList,
+		"ls":          fFileList,
+		"walk":        fWalk,
+		"cd":          fWalk,
 		// data streams
 		"data-read":  fDataRead,
 		"data-write": fDataWrite,

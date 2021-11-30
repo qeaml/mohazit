@@ -80,6 +80,23 @@ func (r *Runner) DoFile(fn string) error {
 	return nil
 }
 
+func (r *Runner) RunLine(line string) error {
+	if line == "" || strings.HasPrefix(line, COMMENT_SINGLE) {
+		// bruh
+	} else {
+		r.line++
+		s, err := r.parser.ParseStatement(line)
+		if err != nil {
+			return r.errOf(err)
+		}
+		err = r.interpreter.RunStatement(s)
+		if err != nil {
+			return r.errOf(err)
+		}
+	}
+	return nil
+}
+
 func (r *Runner) errOf(err error) error {
 	return fmt.Errorf("%s:%d: %s", r.name, r.line, err.Error())
 }

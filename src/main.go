@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"mohazit/lang"
 	"mohazit/lib"
@@ -11,7 +12,22 @@ import (
 func main() {
 	lib.Load()
 	if len(os.Args) <= 1 {
-		return
+		r := lang.NewRunner("REPL")
+		input := bufio.NewReader(os.Stdin)
+		for {
+			fmt.Print("> ")
+			line, err := input.ReadString('\n')
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(3)
+			}
+			if strings.HasPrefix(strings.TrimSpace(line), "#q") {
+				break
+			}
+			if err = r.RunLine(line); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
 	} else {
 		fn := os.Args[1]
 		if !strings.HasSuffix(fn, ".mhzt") {
