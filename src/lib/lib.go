@@ -20,6 +20,10 @@ func Load() {
 		"ls":          fFileList,
 		"walk":        fWalk,
 		"cd":          fWalk,
+		// external processer
+		"run":   fRun,
+		"start": fRun,
+		"!":     fRun,
 		// data streams
 		"data-read":  fDataRead,
 		"data-write": fDataWrite,
