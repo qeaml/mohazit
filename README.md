@@ -13,12 +13,12 @@ set num = limited-rng 10
 set guess = ask-number
 # compare
 # yes, i know that this doesn't look that good; i'm working on it
-if \(num) (equals) \(guess)
+if {num} [equals] {guess}
     # that was a good guess!
     say Congratulations! You guessed the number!
 else
     # well, better luck next time
-    say Uh-oh! That's not correct. The number was: \(num)
+    say Uh-oh! That's not correct. The number was: {num}
 end
 ```
 
@@ -39,7 +39,7 @@ end
 
 set num = ask-number
 set target = value 10
-if \(num) (greater) \(target)
+if {num} [greater-than] {target}
     goto greater
 else
     goto lower
@@ -56,16 +56,16 @@ you aren't stuck with only `if` though:
 
 ```rb
 # bruh
-if this (equals) that
+if this [equals]
 else
     say woop
 end
 # ==== INTRODUCING: THE UNLESS STATEMENT ====
-unless this (equals) that
+unless this [equals] that
     say woop
 end
 # you can use else here too
-unless this (equals) that
+unless this [equals] that
     say woop
 else
     say how??????
