@@ -24,9 +24,11 @@ func main() {
 		r := lang.NewRunner(fn)
 		if err := r.DoFile(fn); err != nil {
 			fmt.Println(err.Error())
+			os.Exit(1)
 		}
 	}
 	if err := lib.Cleanup(); err != nil {
 		fmt.Println("-- ERR -- " + err.Error())
+		os.Exit(2)
 	}
 }
