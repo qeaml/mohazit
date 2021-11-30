@@ -98,7 +98,6 @@ func (p *parser) parseObject(s string, t ObjectType) (*Object, error) {
 }
 
 func (p *parser) parseArgs(a string) ([]*Object, error) {
-	// TODO(qeaml): reference parsing
 	out := []*Object{}
 	if a == "" {
 		return out, nil

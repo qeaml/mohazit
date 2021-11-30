@@ -43,3 +43,37 @@ assert -10 [not-equals] 10
 # unlike [equals] a type conversion will occur here
 assert 1 [like] true
 assert-not yes [like] no
+
+# make sure all the ways of writing [equals] work
+set a = 2
+set b = 2
+assert {a} [equals] {b}
+assert {a} [eq] {b}
+assert {a} [is] {b}
+assert {a} [=] {b}
+assert {a} [==] {b}
+
+# same for [not-equals]
+set b = 1
+assert {a} [not-equals] {b}
+assert {a} [neq] {b}
+assert {a} [is-not] {b}
+assert {a} [isnt] {b}
+assert {a} [!=] {b}
+assert {a} [~=] {b}
+
+# now for [greater-than]
+assert {a} [greater-than] {b}
+assert {a} [greater] {b}
+assert {a} [larger-than] {b}
+assert {a} [larger] {b}
+assert {a} [gt] {b}
+assert {a} [>] {b}
+
+# and last but not [lesser-than]
+assert {b} [lesser-than] {a}
+assert {b} [lesser] {a}
+assert {b} [smaller-than] {a}
+assert {b} [smaller] {a}
+assert {b} [lt] {a}
+assert {b} [<] {a}

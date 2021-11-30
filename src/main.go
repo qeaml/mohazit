@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"mohazit/lang"
-	"mohazit/opers"
+	"mohazit/lib"
 	"os"
 	"strings"
 )
 
 func main() {
-	opers.Init()
+	lib.Load()
 	if len(os.Args) <= 1 {
 		return
 	} else {
@@ -25,5 +25,8 @@ func main() {
 		if err := r.DoFile(fn); err != nil {
 			fmt.Println(err.Error())
 		}
+	}
+	if err := lib.Cleanup(); err != nil {
+		fmt.Println("-- ERR -- " + err.Error())
 	}
 }

@@ -50,7 +50,6 @@ func (i *interpreter) noStmt() []*genStmt {
 }
 
 func (i *interpreter) RunStatement(st *genStmt) error {
-	// TODO(qeaml): test reference testing, once parsing works 100%
 	switch i.ctx {
 	case ctxGlobal:
 		return i.runGlobally(st)
@@ -65,6 +64,13 @@ func (i *interpreter) RunStatement(st *genStmt) error {
 	default:
 		return i.err("internal interpreter error")
 	}
+}
+
+type InterVar struct {
+	Set   func(string, *Object)
+	Get   func(string) (*Object, bool)
+	Has   func(string) bool
+	Parse func(string) (*Object, error)
 }
 
 func (i *interpreter) runGlobally(st *genStmt) error {
@@ -164,7 +170,22 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		if !ok {
 			return i.err("unknown function: " + callSt.Kw)
 		}
-		return f(callSt.Args)
+		return f(callSt.Args, InterVar{
+			Get: func(s string) (*Object, bool) {
+				o, ok := i.vars[s]
+				return o, ok
+			},
+			Set: func(s string, o *Object) {
+				i.vars[s] = o
+			},
+			Has: func(s string) bool {
+				_, ok := i.vars[s]
+				return ok
+			},
+			Parse: func(s string) (*Object, error) {
+				o, err := i.parser.parseObject(s, i.parser.typeOf(s))
+				return o, err
+			}})
 	}
 }
 
@@ -255,7 +276,7 @@ func (i *interpreter) err(txt string) error {
 	return errors.New("interpreter error: " + txt)
 }
 
-type FuncMap map[string]func([]*Object) error
+type FuncMap map[string]func([]*Object, InterVar) error
 type CompMap map[string]func([]*Object) (bool, error)
 
 var Funcs = make(FuncMap)

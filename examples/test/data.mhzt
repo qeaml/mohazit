@@ -1,0 +1,11 @@
+say == Data Streams
+
+# this will create the file if it doesn't exist, but empty it if it exists
+# means: no need to check if the file exists in the first place
+file-create new.txt
+file-open new.txt \ my-file
+data-write hello world
+data-seek 6
+data-read 5 what
+say goodbye {what}
+data-close
