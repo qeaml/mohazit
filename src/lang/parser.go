@@ -125,6 +125,7 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 				continue
 			}
 			t := p.typeOf(v)
+		outer:
 			switch t {
 			case ObjStr:
 				if len(out) >= 1 && !strings.HasSuffix(v, "\\") {
@@ -148,6 +149,31 @@ func (p *parser) parseArgs(a string) ([]*Object, error) {
 				} else {
 					inRef = true
 				}
+			case ObjInt:
+				digitlike := "-0123456789.0e"
+				for _, c := range v {
+					if !strings.ContainsRune(digitlike, c) {
+						if len(out) >= 1 && !strings.HasSuffix(v, "\\") {
+							obj = out[len(out)-1]
+							if obj.Type == ObjStr {
+								obj.StrV = strings.TrimSpace(obj.StrV + " " + v)
+								out[len(out)-1] = obj
+							} else {
+								obj = p.objStr(v)
+								out = append(out, obj)
+							}
+						} else {
+							obj = p.objStr(strings.TrimSpace(strings.TrimSuffix(v, "\\")))
+							out = append(out, obj)
+						}
+						break outer
+					}
+				}
+				obj, err := p.parseObject(v, t)
+				if err != nil {
+					return nil, err
+				}
+				out = append(out, obj)
 			default:
 				obj, err := p.parseObject(v, t)
 				if err != nil {
