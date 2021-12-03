@@ -10,7 +10,8 @@ label lose
 	say Oh well this is sad...
    say You lost
 end
-if [chance]
+set roll = [lrng] 2
+if {roll} [equals] 0
 	say that is ok
 	say how about you win now
 	goto win

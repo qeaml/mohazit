@@ -86,6 +86,7 @@ func cFileExists(args []*lang.Object) (bool, error) {
 }
 
 func fWalk(args []*lang.Object, i lang.InterVar) error {
+	// TODO(qeaml): join arguments with \ because windows
 	var fileName string
 	if len(args) < 1 {
 		return moreArgs("need file name")

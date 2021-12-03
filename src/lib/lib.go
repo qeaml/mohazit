@@ -61,6 +61,12 @@ func Load() {
 		// file management
 		"file-exists": cFileExists,
 	}
+	lang.Procs = lang.ProcMap{
+		"random":         pRandom,
+		"rng":            pRandom,
+		"limited-random": pLimitedRandom,
+		"lrng":           pLimitedRandom,
+	}
 }
 
 func Cleanup() error {

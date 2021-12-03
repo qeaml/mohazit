@@ -1,0 +1,23 @@
+say RNG
+set a = [rng]
+say {a}
+set a = [rng]
+say {a}
+set a = [rng]
+say {a}
+set a = [rng]
+say {a}
+set a = [rng]
+say {a}
+
+say LRNG
+set a = [lrng] 10
+say {a}
+set a = [lrng] 10
+say {a}
+set a = [lrng] 10
+say {a}
+set a = [lrng] 10
+say {a}
+set a = [lrng] 10
+say {a}

@@ -327,8 +327,10 @@ func (p *parser) toCall(gs *genStmt, vars map[string]*Object) (*callStmt, error)
 }
 
 type varStmt struct {
-	name  string
-	value *Object
+	Name      string
+	Value     *Object
+	Processor string
+	Processed bool
 }
 
 func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
@@ -349,15 +351,48 @@ func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
 	if !hasName {
 		return nil, errors.New("variables must have a value")
 	}
-	values, err := p.parseArgs(valueRaw)
+	proc := ""
+	hasProc := false
+	inProc := false
+	value := ""
+	for _, c := range valueRaw {
+		if !inProc {
+			if c == '[' {
+				if hasProc {
+					return nil, errors.New("variables can only have one processor")
+				}
+				inProc = true
+			} else {
+				value += string(c)
+			}
+		} else {
+			if c == ']' {
+				inProc = false
+				hasProc = true
+			} else {
+				proc += string(c)
+			}
+		}
+	}
+	if inProc {
+		return nil, errors.New("unclosed processor")
+	}
+	values, err := p.parseArgs(value)
 	if err != nil {
 		return nil, err
+	}
+	if !hasProc && len(values) < 1 {
+		return nil, errors.New("need at least 1 value")
+	} else if len(values) < 1 {
+		values = []*Object{p.objNil()}
 	}
 	if len(values) > 1 {
 		return nil, errors.New("variables can only have 1 value")
 	}
 	return &varStmt{
-		name:  strings.ToLower(strings.TrimSpace(name)),
-		value: values[0],
+		Name:      strings.ToLower(strings.TrimSpace(name)),
+		Value:     values[0],
+		Processor: strings.ToLower(strings.TrimSpace(proc)),
+		Processed: hasProc,
 	}, nil
 }

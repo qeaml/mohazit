@@ -156,7 +156,19 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		if err != nil {
 			return err
 		}
-		i.vars[varSt.name] = varSt.value
+		if !varSt.Processed {
+			i.vars[varSt.Name] = varSt.Value
+		} else {
+			proc, ok := Procs[varSt.Processor]
+			if !ok {
+				return i.err("unknown processor: " + varSt.Processor)
+			}
+			res, err := proc(varSt.Value)
+			if err != nil {
+				return err
+			}
+			i.vars[varSt.Name] = res
+		}
 		return nil
 	case "dump-var":
 		fmt.Println(st.Arg, "=", i.vars[st.Arg].Repr())
@@ -278,6 +290,8 @@ func (i *interpreter) err(txt string) error {
 
 type FuncMap map[string]func([]*Object, InterVar) error
 type CompMap map[string]func([]*Object) (bool, error)
+type ProcMap map[string]func(*Object) (*Object, error)
 
 var Funcs = make(FuncMap)
 var Comps = make(CompMap)
+var Procs = make(ProcMap)
