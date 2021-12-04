@@ -11,11 +11,11 @@ import (
 func fFileCreate(args []*lang.Object, i lang.InterVar) error {
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs("need file name")
+		return moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+		return badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
@@ -28,11 +28,11 @@ func fFileCreate(args []*lang.Object, i lang.InterVar) error {
 func fFileDelete(args []*lang.Object, i lang.InterVar) error {
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs("need file name")
+		return moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+		return badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
@@ -45,16 +45,16 @@ func fFileRename(args []*lang.Object, i lang.InterVar) error {
 	var oldName string
 	var newName string
 	if len(args) < 2 {
-		return moreArgs("need file names")
+		return moreArgs.Get("need file names")
 	}
 	oldObj := args[0]
 	if oldObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+		return badType.Get("file name must be a string")
 	}
 	oldName = oldObj.StrV
 	newObj := args[0]
 	if newObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+		return badType.Get("file name must be a string")
 	}
 	newName = newObj.StrV
 
@@ -66,11 +66,11 @@ func fFileRename(args []*lang.Object, i lang.InterVar) error {
 func cFileExists(args []*lang.Object) (bool, error) {
 	var fileName string
 	if len(args) < 1 {
-		return false, moreArgs("need file name")
+		return false, moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return false, badType("file name must be a string")
+		return false, badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
@@ -89,11 +89,11 @@ func fWalk(args []*lang.Object, i lang.InterVar) error {
 	// TODO(qeaml): join arguments with \ because windows
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs("need file name")
+		return moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+		return badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 

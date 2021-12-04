@@ -25,11 +25,9 @@ func Load() {
 		"start": fRun,
 		"!":     fRun,
 		// data streams
-		"data-read":  fDataRead,
 		"data-write": fDataWrite,
 		"data-seek":  fDataSeek,
 		"data-close": fDataClose,
-		"file-open":  fFileOpen,
 	}
 	lang.Comps = lang.CompMap{
 		// general equality
@@ -62,10 +60,15 @@ func Load() {
 		"file-exists": cFileExists,
 	}
 	lang.Procs = lang.ProcMap{
+		// random number generation
 		"random":         pRandom,
 		"rng":            pRandom,
 		"limited-random": pLimitedRandom,
 		"lrng":           pLimitedRandom,
+		// data streams
+		"file-open":   pFileOpen,
+		"data-stream": pDataStream,
+		"data-read":   pDataRead,
 	}
 }
 

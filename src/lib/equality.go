@@ -44,7 +44,7 @@ func cNotEquals(args []*lang.Object) (bool, error) {
 
 func cLike(args []*lang.Object) (bool, error) {
 	if len(args) < 1 {
-		return false, moreArgs("need at least 1 argument")
+		return false, moreArgs.Get("need at least 1 argument")
 	}
 	// type we will try to convert other objects to
 	tt := args[0].Type
@@ -87,30 +87,30 @@ func cLike(args []*lang.Object) (bool, error) {
 
 func cGreater(args []*lang.Object) (bool, error) {
 	if len(args) < 2 {
-		return false, moreArgs("need at least 2 arguments to compare")
+		return false, moreArgs.Get("need at least 2 arguments to compare")
 	}
 	a := args[0]
 	b := args[1]
 	if a.Type != b.Type {
-		return false, badType("both arguments must be the same type")
+		return false, badType.Get("both arguments must be the same type")
 	}
 	if a.Type != lang.ObjInt {
-		return false, badType("arguments are not integers, cannot compare")
+		return false, badType.Get("arguments are not integers, cannot compare")
 	}
 	return a.IntV > b.IntV, nil
 }
 
 func cLesser(args []*lang.Object) (bool, error) {
 	if len(args) < 2 {
-		return false, moreArgs("need at least 2 arguments to compare")
+		return false, moreArgs.Get("need at least 2 arguments to compare")
 	}
 	a := args[0]
 	b := args[1]
 	if a.Type != b.Type {
-		return false, badType("both arguments must be the same type")
+		return false, badType.Get("both arguments must be the same type")
 	}
 	if a.Type != lang.ObjInt {
-		return false, badType("arguments are not integers, cannot compare")
+		return false, badType.Get("arguments are not integers, cannot compare")
 	}
 	return a.IntV < b.IntV, nil
 }

@@ -17,7 +17,7 @@ func pRandom(in *lang.Object) (*lang.Object, error) {
 
 func pLimitedRandom(in *lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjInt {
-		return nil, badType("bound must be an integer")
+		return nil, badType.Get("bound must be an integer")
 	}
 	return &lang.Object{
 		Type: lang.ObjInt,

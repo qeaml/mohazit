@@ -116,3 +116,10 @@ func (o *Object) convertInt() (*Object, bool) {
 		IntV: v,
 	}, true
 }
+
+func NewStr(txt string) *Object {
+	return &Object{
+		Type: ObjStr,
+		StrV: txt,
+	}
+}

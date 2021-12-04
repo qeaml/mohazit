@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"mohazit/lang"
@@ -15,81 +16,55 @@ type Stream interface {
 }
 
 var streams = make(map[string]Stream)
+var streamsSoFar = 1
 var lastStream = ""
 
-func fDataRead(args []*lang.Object, i lang.InterVar) error {
+func pDataRead(arg *lang.Object) (*lang.Object, error) {
 	var amt int
-	var target string
 	var streamName string
-	if len(args) < 2 {
-		return moreArgs("need amount of bytes and target variable")
+	if arg.Type != lang.ObjInt {
+		return nil, badType.Get("amount must be an integer")
 	}
-	var amtObj = args[0]
-	if amtObj.Type != lang.ObjInt {
-		return badType("amount must be an integer")
-	}
-	amt = amtObj.IntV
-	var targetObj = args[1]
-	if targetObj.Type != lang.ObjStr {
-		return badType("target must be a string")
-	}
-	target = targetObj.StrV
-	if len(args) >= 3 {
-		var streamObj = args[1]
-		if streamObj.Type != lang.ObjStr {
-			return badType("stream name must be a string")
-		}
-		streamName = streamObj.StrV
-	} else {
-		if lastStream == "" {
-			return badState("could not infer stream name")
-		}
-		streamName = lastStream
-	}
-	lastStream = streamName
+	amt = arg.IntV
+	streamName = lastStream
 	stream, ok := streams[streamName]
 	if !ok {
-		return badState("no stream named " + streamName + " is open")
+		return nil, badState.Get("no stream named " + streamName + " is open")
 	}
 
-	fmt.Printf("reading data from stream `%s`\n", streamName)
+	fmt.Printf("reading %d byte(s) from stream `%s`\n", amt, streamName)
 
 	data := make([]byte, amt)
 	_, err := stream.Read(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	obj, err := i.Parse(string(data))
-	if err != nil {
-		return err
-	}
-	i.Set(target, obj)
-	return nil
+	return lang.NewStr(string(data)), nil
 }
 
 func fDataWrite(args []*lang.Object, i lang.InterVar) error {
 	var data []byte
 	var streamName string
 	if len(args) < 1 {
-		return moreArgs("need data to write")
+		return moreArgs.Get("need data to write")
 	}
 	data = []byte(args[0].String())
 	if len(args) >= 2 {
 		var streamObj = args[1]
 		if streamObj.Type != lang.ObjStr {
-			return badType("stream name must be a string")
+			return badType.Get("stream name must be a string")
 		}
 		streamName = streamObj.StrV
 	} else {
 		if lastStream == "" {
-			return badState("could not infer stream name")
+			return badState.Get("could not infer stream name")
 		}
 		streamName = lastStream
 	}
 	lastStream = streamName
 	stream, ok := streams[streamName]
 	if !ok {
-		return badState("no stream named " + streamName + " is open")
+		return badState.Get("no stream named " + streamName + " is open")
 	}
 
 	fmt.Printf("writing %d byte(s) to stream `%s`\n", len(data), streamName)
@@ -102,29 +77,29 @@ func fDataSeek(args []*lang.Object, i lang.InterVar) error {
 	var pos int
 	var streamName string
 	if len(args) < 1 {
-		return moreArgs("need data to write")
+		return moreArgs.Get("need data to write")
 	}
 	posObj := args[0]
 	if posObj.Type != lang.ObjInt {
-		return badType("position must be an integer")
+		return badType.Get("position must be an integer")
 	}
 	pos = posObj.IntV
 	if len(args) >= 2 {
 		var streamObj = args[1]
 		if streamObj.Type != lang.ObjStr {
-			return badType("stream name must be a string")
+			return badType.Get("stream name must be a string")
 		}
 		streamName = streamObj.StrV
 	} else {
 		if lastStream == "" {
-			return badState("could not infer stream name")
+			return badState.Get("could not infer stream name")
 		}
 		streamName = lastStream
 	}
 	lastStream = streamName
 	stream, ok := streams[streamName]
 	if !ok {
-		return badState("no stream named " + streamName + " is open")
+		return badState.Get("no stream named " + streamName + " is open")
 	}
 
 	fmt.Printf("seeking to position %d in stream `%s`\n", pos, streamName)
@@ -138,19 +113,19 @@ func fDataClose(args []*lang.Object, i lang.InterVar) error {
 	if len(args) >= 1 {
 		var streamObj = args[0]
 		if streamObj.Type != lang.ObjStr {
-			return badType("stream name must be a string")
+			return badType.Get("stream name must be a string")
 		}
 		streamName = streamObj.StrV
 	} else {
 		if lastStream == "" {
-			return badState("could not infer stream name")
+			return badState.Get("could not infer stream name")
 		}
 		streamName = lastStream
 	}
 	lastStream = streamName
 	stream, ok := streams[streamName]
 	if !ok {
-		return badState("no stream named " + streamName + " is open")
+		return badState.Get("no stream named " + streamName + " is open")
 	}
 
 	fmt.Printf("closing stream `%s`\n", streamName)
@@ -160,39 +135,38 @@ func fDataClose(args []*lang.Object, i lang.InterVar) error {
 	return nil
 }
 
-func fFileOpen(args []*lang.Object, i lang.InterVar) error {
+func pFileOpen(arg *lang.Object) (*lang.Object, error) {
 	var fileName string
 	var streamName string
-	if len(args) < 1 {
-		return moreArgs("need file name")
+	if arg.Type == lang.ObjNil {
+		return nil, moreArgs.Get("need file name")
 	}
-	fileObj := args[0]
-	if fileObj.Type != lang.ObjStr {
-		return badType("file name must be a string")
+	if arg.Type != lang.ObjStr {
+		return nil, badType.Get("file name must be a string")
 	}
-	fileName = fileObj.StrV
-	if len(args) >= 2 {
-		var streamObj = args[1]
-		if streamObj.Type != lang.ObjStr {
-			return badType("stream name must be a string")
-		}
-		streamName = streamObj.StrV
-	} else {
-		if lastStream == "" {
-			return badState("could not infer stream name")
-		}
-		streamName = lastStream
-	}
+	fileName = arg.StrV
+	streamName = fmt.Sprintf("filestream%d", streamsSoFar)
+	streamsSoFar++
 
 	fmt.Printf("opening file `%s` to stream `%s`\n", fileName, streamName)
 
 	file, err := os.OpenFile(fileName, os.O_RDWR, os.ModePerm)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	streams[streamName] = file
 	lastStream = streamName
-	return nil
+	return lang.NewStr(streamName), nil
+}
+
+func pDataStream(args *lang.Object) (*lang.Object, error) {
+	streamName := fmt.Sprintf("buffer%d", streamsSoFar)
+	streamsSoFar++
+
+	fmt.Printf("opening stream `%s`\n", streamName)
+
+	streams[streamName] = &BufferStream{}
+	return lang.NewStr(streamName), nil
 }
 
 type DummyStream struct{}
@@ -207,5 +181,29 @@ func (s *DummyStream) Seek(offset int64, whence int) (int64, error) {
 	return 0, nil
 }
 func (s *DummyStream) Close() error {
+	return nil
+}
+
+type BufferStream struct {
+	data bytes.Buffer
+	read bytes.Reader
+}
+
+func (s *BufferStream) Read(p []byte) (int, error) {
+	return s.read.Read(p)
+}
+
+func (s *BufferStream) Write(p []byte) (int, error) {
+	n, err := s.data.Write(p)
+	s.read.Seek(int64(n), 0)
+	return n, err
+}
+
+func (s *BufferStream) Seek(offset int64, whence int) (int64, error) {
+	return s.read.Seek(offset, whence)
+}
+
+func (s *BufferStream) Close() error {
+	s.data.Reset()
 	return nil
 }

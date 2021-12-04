@@ -12,17 +12,17 @@ func fRun(args []*lang.Object, i lang.InterVar) error {
 	var cmd string
 	var annotations []string
 	if len(args) < 1 {
-		return moreArgs("need command")
+		return moreArgs.Get("need command")
 	}
 	cmdObj := args[0]
 	if cmdObj.Type != lang.ObjStr {
-		return badType("command must be a string")
+		return badType.Get("command must be a string")
 	}
 	cmd = cmdObj.StrV + " "
 	if len(args) >= 2 {
 		annotObj := args[1]
 		if annotObj.Type != lang.ObjStr {
-			return badType("annotations must be a string")
+			return badType.Get("annotations must be a string")
 		}
 		annotations = strings.Split(annotObj.StrV, " ")
 	}
