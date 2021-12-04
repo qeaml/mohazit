@@ -123,3 +123,10 @@ func NewStr(txt string) *Object {
 		StrV: txt,
 	}
 }
+
+func NewInt(val int) *Object {
+	return &Object{
+		Type: ObjInt,
+		IntV: val,
+	}
+}

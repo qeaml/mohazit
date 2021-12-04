@@ -1,7 +1,9 @@
 package lib
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"mohazit/lang"
 	"os"
 	"os/exec"
@@ -52,14 +54,10 @@ func fRun(args []*lang.Object, i lang.InterVar) error {
 	if err != nil {
 		return err
 	}
-	uo := os.Stderr
+	uo := &CapturedOutput{target: os.Stderr}
 	for _, a := range annotations {
 		if strings.ToLower(a) == "quiet" {
-			f, err := os.Open(os.DevNull)
-			if err != nil {
-				return err
-			}
-			uo = f
+			uo.Quiet()
 		}
 	}
 	execCmd := exec.Cmd{
@@ -69,4 +67,83 @@ func fRun(args []*lang.Object, i lang.InterVar) error {
 		Stderr: uo,
 	}
 	return execCmd.Run()
+}
+
+func pRun(arg *lang.Object) (*lang.Object, error) {
+	if arg.Type != lang.ObjStr {
+		return nil, badOper.Get("command must be a string")
+	}
+	cmd := arg.StrV
+
+	// fmt.Printf("command: %s\n", cmd)
+
+	cmdProgramName := ""
+	cmdArgs := []string{}
+	hasProg := false
+	ctx := ""
+	for _, c := range cmd {
+		if c == ' ' {
+			if !hasProg {
+				cmdProgramName = strings.TrimSpace(ctx)
+				cmdArgs = append(cmdArgs, cmdProgramName)
+				ctx = ""
+				hasProg = true
+			} else {
+				cmdArgs = append(cmdArgs, strings.TrimSpace(ctx))
+				ctx = ""
+			}
+			continue
+		}
+		ctx += string(c)
+	}
+	if len(ctx) > 0 {
+		cmdArgs = append(cmdArgs, strings.TrimSpace(ctx))
+	}
+	cmdProgram, err := exec.LookPath(cmdProgramName)
+	if err != nil {
+		return nil, err
+	}
+	out := &CapturedOutput{target: os.Stderr}
+	out.Quiet()
+	execCmd := exec.Cmd{
+		Path:   cmdProgram,
+		Args:   cmdArgs,
+		Stdout: out,
+		Stderr: out,
+	}
+	if err = execCmd.Run(); err != nil {
+		return nil, err
+	}
+	data, err := out.Data()
+	if err != nil {
+		return nil, err
+	}
+	res := strings.TrimSuffix(string(data), "\n")
+	return lang.NewStr(res), err
+}
+
+type CapturedOutput struct {
+	target  io.Writer
+	capture bytes.Buffer
+	quiet   bool
+}
+
+func (o *CapturedOutput) Target(w io.Writer) {
+	o.target = w
+}
+
+func (o *CapturedOutput) Quiet() {
+	o.quiet = true
+}
+
+func (o *CapturedOutput) Write(p []byte) (int, error) {
+	if !o.quiet {
+		o.target.Write(p)
+	}
+	return o.capture.Write(p)
+}
+
+func (o *CapturedOutput) Data() ([]byte, error) {
+	r := bytes.NewReader(o.capture.Bytes())
+	return io.ReadAll(r)
 }

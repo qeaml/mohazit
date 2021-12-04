@@ -69,6 +69,10 @@ func Load() {
 		"file-open":   pFileOpen,
 		"data-stream": pDataStream,
 		"data-read":   pDataRead,
+		// external processes
+		"run":   pRun,
+		"start": pRun,
+		"!":     pRun,
 	}
 }
 
