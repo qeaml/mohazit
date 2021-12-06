@@ -159,15 +159,25 @@ func (i *interpreter) runGlobally(st *genStmt) error {
 		if !varSt.Processed {
 			i.vars[varSt.Name] = varSt.Value
 		} else {
-			proc, ok := Procs[varSt.Processor]
-			if !ok {
-				return i.err("unknown processor: " + varSt.Processor)
+			val := varSt.Value
+			if val.Type == ObjRef {
+				var ok bool
+				val, ok = i.vars[val.RefV]
+				if !ok {
+					return i.err("unknown variable: " + val.RefV)
+				}
 			}
-			res, err := proc(varSt.Value)
-			if err != nil {
-				return err
+			for _, proc := range varSt.Processor {
+				procFunc, ok := Procs[proc]
+				if !ok {
+					return i.err("unknown comparator: " + proc)
+				}
+				val, err = procFunc(val)
+				if err != nil {
+					return err
+				}
 			}
-			i.vars[varSt.Name] = res
+			i.vars[varSt.Name] = val
 		}
 		return nil
 	case "dump-var":

@@ -329,7 +329,7 @@ func (p *parser) toCall(gs *genStmt, vars map[string]*Object) (*callStmt, error)
 type varStmt struct {
 	Name      string
 	Value     *Object
-	Processor string
+	Processor []string
 	Processed bool
 }
 
@@ -351,7 +351,8 @@ func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
 	if !hasName {
 		return nil, errors.New("variables must have a value")
 	}
-	proc := ""
+	procRaw := ""
+	procs := []string{}
 	hasProc := false
 	inProc := false
 	value := ""
@@ -367,10 +368,14 @@ func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
 			}
 		} else {
 			if c == ']' {
+				procs = append(procs, strings.ToLower(strings.TrimSpace(procRaw)))
 				inProc = false
 				hasProc = true
+			} else if c == ' ' {
+				procs = append(procs, strings.ToLower(strings.TrimSpace(procRaw)))
+				procRaw = ""
 			} else {
-				proc += string(c)
+				procRaw += string(c)
 			}
 		}
 	}
@@ -392,7 +397,7 @@ func (p *parser) toVar(gs *genStmt) (*varStmt, error) {
 	return &varStmt{
 		Name:      strings.ToLower(strings.TrimSpace(name)),
 		Value:     values[0],
-		Processor: strings.ToLower(strings.TrimSpace(proc)),
+		Processor: procs,
 		Processed: hasProc,
 	}, nil
 }
