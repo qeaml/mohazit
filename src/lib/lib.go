@@ -10,7 +10,8 @@ func Load() {
 	streams["void"] = &DummyStream{}
 	lang.Funcs = lang.FuncMap{
 		// user interaction
-		"say": fSay,
+		"say":     fSay,
+		"type-of": fTypeOf,
 		// file management
 		"file-create": fFileCreate,
 		"file-delete": fFileDelete,
@@ -65,6 +66,9 @@ func Load() {
 		"rng":            pRandom,
 		"limited-random": pLimitedRandom,
 		"lrng":           pLimitedRandom,
+		// type converters
+		"atoi":      pAtoi,
+		"stringify": pStringify,
 		// data streams
 		"file-open":   pFileOpen,
 		"data-stream": pDataStream,

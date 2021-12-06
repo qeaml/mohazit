@@ -12,3 +12,11 @@ func fSay(args []*lang.Object, i lang.InterVar) error {
 	fmt.Print("\n")
 	return nil
 }
+
+func fTypeOf(args []*lang.Object, i lang.InterVar) error {
+	for _, o := range args {
+		fmt.Print(lang.TypeName(o.Type), " ")
+	}
+	fmt.Print("\n")
+	return nil
+}

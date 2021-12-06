@@ -130,3 +130,18 @@ func NewInt(val int) *Object {
 		IntV: val,
 	}
 }
+
+func TypeName(t ObjectType) string {
+	switch t {
+	case ObjNil:
+		return "Nil"
+	case ObjStr:
+		return "Str"
+	case ObjInt:
+		return "Int"
+	case ObjBool:
+		return "Bool"
+	default:
+		return fmt.Sprint(t)
+	}
+}
