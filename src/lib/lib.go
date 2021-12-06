@@ -74,6 +74,10 @@ func Load() {
 		"decrease":       pDec,
 		"dec":            pDec,
 		"--":             pDec,
+		"negative":       pNeg,
+		"negate":         pNeg,
+		"neg":            pNeg,
+		"-":              pNeg,
 		// type converters
 		"atoi":      pAtoi,
 		"stringify": pStringify,

@@ -54,3 +54,10 @@ func pDec(in *lang.Object) (*lang.Object, error) {
 	}
 	return lang.NewInt(in.IntV - 1), nil
 }
+
+func pNeg(in *lang.Object) (*lang.Object, error) {
+	if in.Type != lang.ObjInt {
+		return nil, badType.Get("input must be an integer")
+	}
+	return lang.NewInt(-in.IntV), nil
+}
