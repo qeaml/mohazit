@@ -1,0 +1,19 @@
+#: This script increments the iteration number found in the src/tool/iteration
+    file. This is a great demonstraction of the power that variable processors
+    behold. ##
+
+# open the file, of course
+set f = [file-open] src/tool/iteration
+#:
+1. data-read: read 2 bytes as a string (2 digits of the iteration count)
+2. atoi: convert the resulting string to an integer
+3. ++: increment that integer
+4. stringify: convert the resulting integer to a string
+##
+set iter = [data-read atoi ++ stringify] 2
+# seek back to the beginning of the file to overwrite rather than append
+data-seek 0
+# write the new iteration number
+data-write {iter}
+# leave the file alone
+data-close

@@ -40,3 +40,17 @@ func pAtoi(in *lang.Object) (*lang.Object, error) {
 func pStringify(in *lang.Object) (*lang.Object, error) {
 	return lang.NewStr(in.String()), nil
 }
+
+func pInc(in *lang.Object) (*lang.Object, error) {
+	if in.Type != lang.ObjInt {
+		return nil, badType.Get("input must be an integer")
+	}
+	return lang.NewInt(in.IntV + 1), nil
+}
+
+func pDec(in *lang.Object) (*lang.Object, error) {
+	if in.Type != lang.ObjInt {
+		return nil, badType.Get("input must be an integer")
+	}
+	return lang.NewInt(in.IntV - 1), nil
+}

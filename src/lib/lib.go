@@ -61,11 +61,19 @@ func Load() {
 		"file-exists": cFileExists,
 	}
 	lang.Procs = lang.ProcMap{
-		// random number generation
+		// number processing
 		"random":         pRandom,
 		"rng":            pRandom,
 		"limited-random": pLimitedRandom,
 		"lrng":           pLimitedRandom,
+		"increment":      pInc,
+		"increase":       pInc,
+		"inc":            pInc,
+		"++":             pInc,
+		"decrement":      pDec,
+		"decrease":       pDec,
+		"dec":            pDec,
+		"--":             pDec,
 		// type converters
 		"atoi":      pAtoi,
 		"stringify": pStringify,
