@@ -59,6 +59,8 @@ func Load() {
 		"<":            cLesser,
 		// file management
 		"file-exists": cFileExists,
+		// http
+		"http-ok": cHttpOk,
 	}
 	lang.Procs = lang.ProcMap{
 		// number processing
@@ -89,6 +91,8 @@ func Load() {
 		"run":   pRun,
 		"start": pRun,
 		"!":     pRun,
+		// http
+		"http-get": pHttpGet,
 	}
 }
 

@@ -1,0 +1,6 @@
+set req = [http-get] https://www.boredapi.com/api/activity?type=recreational
+assert [http-ok]
+data-seek 13
+set activity = [data-read] 69
+say {activity}
+data-close

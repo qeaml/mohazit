@@ -207,3 +207,52 @@ func (s *BufferStream) Close() error {
 	s.data.Reset()
 	return nil
 }
+
+type GenericStream struct {
+	data []byte
+	pos  int
+}
+
+func (s *GenericStream) Read(p []byte) (int, error) {
+	var i = 0
+	for s.pos < len(s.data) && i < len(p) {
+		p[i] = s.data[s.pos]
+		i++
+		s.pos++
+	}
+	return i, nil
+}
+
+func (s *GenericStream) Write(p []byte) (int, error) {
+	var i = 0
+	for i < len(p) {
+		if s.pos >= len(s.data) {
+			s.data = append(s.data, p[i])
+		} else {
+			s.data[s.pos] = p[i]
+		}
+		s.pos++
+		i++
+	}
+	return i, nil
+}
+
+func (s *GenericStream) Seek(offset int64, whence int) (int64, error) {
+	switch whence {
+	case 0:
+		s.pos = int(offset)
+	case 1:
+		s.pos += int(offset)
+	case 2:
+		s.pos = len(s.data) - int(offset)
+	default:
+		return int64(s.pos), badState.Fail("unknown whence value")
+	}
+	return int64(s.pos), nil
+}
+
+func (s *GenericStream) Close() error {
+	s.data = []byte{}
+	s.pos = 0
+	return nil
+}
