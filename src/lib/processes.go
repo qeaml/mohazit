@@ -10,72 +10,26 @@ import (
 	"strings"
 )
 
-func fRun(args []*lang.Object, i lang.InterVar) error {
+func fRun(args []*lang.Object) (*lang.Object, error) {
 	var cmd string
-	var annotations []string
+	// var annotations []string
 	if len(args) < 1 {
-		return moreArgs.Get("need command")
+		return lang.NewNil(), moreArgs.Get("need command")
 	}
 	cmdObj := args[0]
 	if cmdObj.Type != lang.ObjStr {
-		return badType.Get("command must be a string")
+		return lang.NewNil(), badType.Get("command must be a string")
 	}
 	cmd = cmdObj.StrV + " "
-	if len(args) >= 2 {
-		annotObj := args[1]
-		if annotObj.Type != lang.ObjStr {
-			return badType.Get("annotations must be a string")
-		}
-		annotations = strings.Split(annotObj.StrV, " ")
-	}
+	// if len(args) >= 2 {
+	// 	annotObj := args[1]
+	// 	if annotObj.Type != lang.ObjStr {
+	// 		return lang.NewNil(), badType.Get("annotations must be a string")
+	// 	}
+	// 	annotations = strings.Split(annotObj.StrV, " ")
+	// }
 
 	fmt.Printf("command: %s\n", cmd)
-
-	cmdProgramName := ""
-	cmdArgs := []string{}
-	hasProg := false
-	ctx := ""
-	for _, c := range cmd {
-		if c == ' ' {
-			if !hasProg {
-				cmdProgramName = strings.TrimSpace(ctx)
-				cmdArgs = append(cmdArgs, cmdProgramName)
-				ctx = ""
-				hasProg = true
-			} else {
-				cmdArgs = append(cmdArgs, strings.TrimSpace(ctx))
-				ctx = ""
-			}
-			continue
-		}
-		ctx += string(c)
-	}
-	cmdProgram, err := exec.LookPath(cmdProgramName)
-	if err != nil {
-		return err
-	}
-	uo := &CapturedOutput{target: os.Stderr}
-	for _, a := range annotations {
-		if strings.ToLower(a) == "quiet" {
-			uo.Quiet()
-		}
-	}
-	execCmd := exec.Cmd{
-		Path:   cmdProgram,
-		Args:   cmdArgs,
-		Stdout: uo,
-		Stderr: uo,
-	}
-	return execCmd.Run()
-}
-
-func pRun(arg *lang.Object) (*lang.Object, error) {
-	if arg.Type != lang.ObjStr {
-		return nil, badOper.Get("command must be a string")
-	}
-	cmd := arg.StrV
-
-	// fmt.Printf("command: %s\n", cmd)
 
 	cmdProgramName := ""
 	cmdArgs := []string{}

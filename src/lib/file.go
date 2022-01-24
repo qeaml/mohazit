@@ -8,59 +8,62 @@ import (
 	"sort"
 )
 
-func fFileCreate(args []*lang.Object, i lang.InterVar) error {
+func fFileCreate(args []*lang.Object) (*lang.Object, error) {
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs.Get("need file name")
+		return lang.NewNil(), moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
 	fmt.Printf("creating file `%s`\n", fileName)
 
-	_, err := os.Create(fileName)
-	return err
+	f, err := os.Create(fileName)
+	if err != nil {
+		return lang.NewNil(), err
+	}
+	return lang.NewNil(), f.Close()
 }
 
-func fFileDelete(args []*lang.Object, i lang.InterVar) error {
+func fFileDelete(args []*lang.Object) (*lang.Object, error) {
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs.Get("need file name")
+		return lang.NewNil(), moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
 	fmt.Printf("deleting file `%s`\n", fileName)
 
-	return os.Remove(fileName)
+	return lang.NewNil(), os.Remove(fileName)
 }
 
-func fFileRename(args []*lang.Object, i lang.InterVar) error {
+func fFileRename(args []*lang.Object) (*lang.Object, error) {
 	var oldName string
 	var newName string
 	if len(args) < 2 {
-		return moreArgs.Get("need file names")
+		return lang.NewNil(), moreArgs.Get("need file names")
 	}
 	oldObj := args[0]
 	if oldObj.Type != lang.ObjStr {
-		return badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	oldName = oldObj.StrV
-	newObj := args[0]
+	newObj := args[1]
 	if newObj.Type != lang.ObjStr {
-		return badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	newName = newObj.StrV
 
 	fmt.Printf("renaming file `%s` to `%s`\n", oldName, newName)
 
-	return os.Rename(oldName, newName)
+	return lang.NewNil(), os.Rename(oldName, newName)
 }
 
 func cFileExists(args []*lang.Object) (bool, error) {
@@ -85,15 +88,15 @@ func cFileExists(args []*lang.Object) (bool, error) {
 	return true, nil
 }
 
-func fWalk(args []*lang.Object, i lang.InterVar) error {
+func fWalk(args []*lang.Object) (*lang.Object, error) {
 	// TODO(qeaml): join arguments with \ because windows
 	var fileName string
 	if len(args) < 1 {
-		return moreArgs.Get("need file name")
+		return lang.NewNil(), moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
@@ -101,26 +104,26 @@ func fWalk(args []*lang.Object, i lang.InterVar) error {
 
 	err := os.Chdir(fileName)
 	if err != nil {
-		return err
+		return lang.NewNil(), err
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		return err
+		return lang.NewNil(), err
 	}
 	fmt.Printf("working directory is now `%s`\n", wd)
-	return nil
+	return lang.NewStr(wd), nil
 }
 
-func fFileList(args []*lang.Object, i lang.InterVar) error {
+func fFileList(args []*lang.Object) (*lang.Object, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return err
+		return lang.NewNil(), err
 	}
 	fmt.Printf("Directory of %s\n", wd)
 	entries, err := os.ReadDir(".")
 	if err != nil {
-		return err
+		return lang.NewNil(), err
 	}
 	dirs := []fs.DirEntry{}
 	files := []fs.DirEntry{}
@@ -146,7 +149,7 @@ func fFileList(args []*lang.Object, i lang.InterVar) error {
 		}
 		di, err := d.Info()
 		if err != nil {
-			return err
+			return lang.NewNil(), err
 		}
 		niceTime := di.ModTime().Format("15:04:05 02.01.2006")
 		fmt.Printf("%s(DIR)      %s\n", niceName, niceTime)
@@ -166,7 +169,7 @@ func fFileList(args []*lang.Object, i lang.InterVar) error {
 		}
 		fi, err := f.Info()
 		if err != nil {
-			return err
+			return lang.NewNil(), err
 		}
 		niceTime := fi.ModTime().Format("15:04:05 02.01.2006")
 		niceSize := humanSize(fi.Size())
@@ -185,7 +188,7 @@ func fFileList(args []*lang.Object, i lang.InterVar) error {
 	} else {
 		fmt.Printf("%d files\n", len(files))
 	}
-	return nil
+	return lang.NewNil(), nil
 }
 
 func humanSize(size int64) string {

@@ -8,7 +8,7 @@ import (
 
 func Load() {
 	streams["void"] = &DummyStream{}
-	lang.Funcs = lang.FuncMap{
+	lang.Funcs = lang.VFuncMap{
 		// user interaction
 		"say":     fSay,
 		"type-of": fTypeOf,
@@ -30,7 +30,7 @@ func Load() {
 		"data-seek":  fDataSeek,
 		"data-close": fDataClose,
 	}
-	lang.Comps = lang.CompMap{
+	lang.Comps = lang.VCompMap{
 		// general equality
 		"equals":       cEquals,
 		"eq":           cEquals,
@@ -61,38 +61,6 @@ func Load() {
 		"file-exists": cFileExists,
 		// http
 		"http-ok": cHttpOk,
-	}
-	lang.Procs = lang.ProcMap{
-		// number processing
-		"random":         pRandom,
-		"rng":            pRandom,
-		"limited-random": pLimitedRandom,
-		"lrng":           pLimitedRandom,
-		"increment":      pInc,
-		"increase":       pInc,
-		"inc":            pInc,
-		"++":             pInc,
-		"decrement":      pDec,
-		"decrease":       pDec,
-		"dec":            pDec,
-		"--":             pDec,
-		"negative":       pNeg,
-		"negate":         pNeg,
-		"neg":            pNeg,
-		"-":              pNeg,
-		// type converters
-		"atoi":      pAtoi,
-		"stringify": pStringify,
-		// data streams
-		"file-open":   pFileOpen,
-		"data-stream": pDataStream,
-		"data-read":   pDataRead,
-		// external processes
-		"run":   pRun,
-		"start": pRun,
-		"!":     pRun,
-		// http
-		"http-get": pHttpGet,
 	}
 }
 

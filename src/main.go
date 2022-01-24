@@ -1,52 +1,54 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"mohazit/lang"
+	"io"
+	"mohazit/lang/new"
 	"mohazit/lib"
-	"mohazit/tool"
 	"os"
-	"strings"
+)
+
+const (
+	eArgs int = 1 + iota
+	eFile
+	eRead
+	eInterpreter
+	eScript
+	eCleanup
 )
 
 func main() {
 	lib.Load()
-	if len(os.Args) <= 1 {
-		fmt.Printf("Mohazit %s%d\n\n", tool.Version, tool.Iteration)
-		r := lang.NewRunner("REPL")
-		input := bufio.NewReader(os.Stdin)
+	if len(os.Args) < 2 {
+		fmt.Println("need input file")
+		os.Exit(eArgs)
+	} else {
+		f, err := os.Open(os.Args[1])
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(eFile)
+		}
+		s, err := io.ReadAll(f)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(eRead)
+		}
+		i := new.NewInterpreter(string(s))
 		for {
-			fmt.Print("> ")
-			line, err := input.ReadString('\n')
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(3)
-			}
-			if strings.HasPrefix(strings.TrimSpace(line), "#q") {
+			cont, err := i.Do()
+			if !cont {
 				break
 			}
-			if err = r.RunLine(line); err != nil {
+			if err != nil {
 				fmt.Println(err.Error())
+				os.Exit(eScript)
 			}
-		}
-	} else {
-		fn := os.Args[1]
-		if !strings.HasSuffix(fn, ".mhzt") {
-			assumed := fn + ".mhzt"
-			_, err := os.Stat(assumed)
-			if !os.IsNotExist(err) {
-				fn = assumed
-			}
-		}
-		r := lang.NewRunner(fn)
-		if err := r.DoFile(fn); err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
 		}
 	}
 	if err := lib.Cleanup(); err != nil {
-		fmt.Println("-- ERR -- " + err.Error())
-		os.Exit(2)
+		fmt.Println("-- CLEANUP ERROR --")
+		fmt.Println("(this usually isn't a serious problem, but should be avoided!")
+		fmt.Println(err.Error())
+		os.Exit(eCleanup)
 	}
 }

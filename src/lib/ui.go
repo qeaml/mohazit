@@ -5,18 +5,18 @@ import (
 	"mohazit/lang"
 )
 
-func fSay(args []*lang.Object, i lang.InterVar) error {
+func fSay(args []*lang.Object) (*lang.Object, error) {
 	for _, o := range args {
 		fmt.Print(o.String(), " ")
 	}
 	fmt.Print("\n")
-	return nil
+	return lang.NewNil(), nil
 }
 
-func fTypeOf(args []*lang.Object, i lang.InterVar) error {
+func fTypeOf(args []*lang.Object) (*lang.Object, error) {
 	for _, o := range args {
-		fmt.Print(lang.TypeName(o.Type), " ")
+		fmt.Print(o.Type.String(), " ")
 	}
 	fmt.Print("\n")
-	return nil
+	return lang.NewNil(), nil
 }

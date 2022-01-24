@@ -16,6 +16,23 @@ const (
 	ObjInv
 )
 
+func (t ObjectType) String() string {
+	switch t {
+	case ObjNil:
+		return "Nil"
+	case ObjStr:
+		return "Str"
+	case ObjInt:
+		return "Int"
+	case ObjBool:
+		return "Bool"
+	case ObjRef:
+		return "Ref"
+	default:
+		return fmt.Sprint(uint8(t))
+	}
+}
+
 type Object struct {
 	Type  ObjectType
 	StrV  string
@@ -35,7 +52,7 @@ func (o *Object) Repr() string {
 	case ObjBool:
 		return fmt.Sprintf("[Bool %t]", o.BoolV)
 	case ObjRef:
-		return "[Ref \\(" + o.StrV + ")]"
+		return "[Ref {" + o.StrV + "}]"
 	}
 	return "?"
 }
@@ -43,7 +60,7 @@ func (o *Object) Repr() string {
 func (o *Object) String() string {
 	switch o.Type {
 	case ObjNil:
-		return "Nil"
+		return "nil"
 	case ObjStr:
 		return o.StrV
 	case ObjInt:
@@ -131,17 +148,8 @@ func NewInt(val int) *Object {
 	}
 }
 
-func TypeName(t ObjectType) string {
-	switch t {
-	case ObjNil:
-		return "Nil"
-	case ObjStr:
-		return "Str"
-	case ObjInt:
-		return "Int"
-	case ObjBool:
-		return "Bool"
-	default:
-		return fmt.Sprint(t)
+func NewNil() *Object {
+	return &Object{
+		Type: ObjNil,
 	}
 }
