@@ -42,8 +42,7 @@ func (g *lazyError) Of(err error) error {
 }
 
 var (
-	moreArgs = LazyError("not enough arguments: %s", "moreArgs")
-	badType  = LazyError("wrong type: %s", "badType")
-	badState = LazyError("unexpected: %s", "badState")
-	badOper  = LazyError("unsupported: %s", "badOper")
+	moreArgs = LazyError("function: not enough arguments: %s", "fnc_moreargs")
+	badType  = LazyError("function: wrong type: %s", "fnc_badtype")
+	badState = LazyError("function: unexpected: %s", "fnc_badstate")
 )

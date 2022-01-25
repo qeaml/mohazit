@@ -12,55 +12,47 @@ func Load() {
 		// user interaction
 		"say":     fSay,
 		"type-of": fTypeOf,
+		// numeric
+		"random":         fRandom,
+		"limited-random": fLimitedRandom,
+		"randi":          fLimitedRandom,
+		"atoi":           fAtoi,
+		"stringify":      fStringify,
+		"inc":            fInc,
+		"dec":            fDec,
+		"neg":            fNeg,
 		// file management
+		"file-open":   fFileOpen,
 		"file-create": fFileCreate,
 		"file-delete": fFileDelete,
 		"file-rename": fFileRename,
 		"file-list":   fFileList,
+		"file-exists": fFileExists,
 		"dir":         fFileList,
 		"ls":          fFileList,
 		"walk":        fWalk,
 		"cd":          fWalk,
-		// external processer
+		// external processes
 		"run":   fRun,
 		"start": fRun,
-		"!":     fRun,
 		// data streams
-		"data-write": fDataWrite,
-		"data-seek":  fDataSeek,
-		"data-close": fDataClose,
+		"data-stream": fDataStream,
+		"data-read":   fDataRead,
+		"data-write":  fDataWrite,
+		"data-seek":   fDataSeek,
+		"data-close":  fDataClose,
+		// http
+		"http-get": fHttpGet,
+		"http-ok":  fHttpOk,
 	}
 	lang.Comps = lang.VCompMap{
-		// general equality
-		"equals":       cEquals,
-		"eq":           cEquals,
-		"is":           cEquals,
-		"=":            cEquals,
-		"==":           cEquals,
-		"not-equals":   cNotEquals,
-		"neq":          cNotEquals,
-		"is-not":       cNotEquals,
-		"isnt":         cNotEquals,
-		"!=":           cNotEquals,
-		"~=":           cNotEquals,
-		"<>":           cNotEquals,
-		"like":         cLike,
-		"greater":      cGreater,
-		"greater-than": cGreater,
-		"gt":           cGreater,
-		"larger":       cGreater,
-		"larger-than":  cGreater,
-		">":            cGreater,
-		"lesser":       cLesser,
-		"lesser-than":  cLesser,
-		"lt":           cLesser,
-		"smaller":      cLesser,
-		"smaller-than": cLesser,
-		"<":            cLesser,
-		// file management
-		"file-exists": cFileExists,
-		// http
-		"http-ok": cHttpOk,
+		"=":  cEquals,
+		"==": cEquals,
+		"~=": cLike,
+		"!=": cNotEquals,
+		"<>": cNotEquals,
+		">":  cGreater,
+		"<":  cLesser,
 	}
 }
 

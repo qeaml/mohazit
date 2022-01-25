@@ -15,7 +15,11 @@ var resps = make(map[string]*grequests.Response)
 var respCount = 0
 var lastResp = ""
 
-func pHttpGet(in *lang.Object) (*lang.Object, error) {
+func fHttpGet(args []*lang.Object) (*lang.Object, error) {
+	if len(args) < 1 {
+		return lang.NewNil(), moreArgs.Get("need input")
+	}
+	in := args[0]
 	if in.Type != lang.ObjStr {
 		return nil, badType.Get("URL must be a string")
 	}
@@ -33,20 +37,20 @@ func pHttpGet(in *lang.Object) (*lang.Object, error) {
 	return lang.NewStr(respName), nil
 }
 
-func cHttpOk(args []*lang.Object) (bool, error) {
+func fHttpOk(args []*lang.Object) (*lang.Object, error) {
 	respName := lastResp
 	if len(args) > 1 {
 		if args[0].Type == lang.ObjStr {
 			respName = args[0].StrV
 		} else {
-			return false, badType.Get("response name must be a string")
+			return lang.NewNil(), badType.Get("response name must be a string")
 		}
 	} else if respName == "" {
-		return false, badState.Get("could not infer response name")
+		return lang.NewNil(), badState.Get("could not infer response name")
 	}
 	resp, ok := resps[respName]
 	if !ok {
-		return false, badState.Get("no response named `" + respName + "` exists")
+		return lang.NewNil(), badState.Get("no response named `" + respName + "` exists")
 	}
-	return resp.StatusCode >= 200 && resp.StatusCode < 300, nil
+	return lang.NewBool(resp.StatusCode >= 200 && resp.StatusCode < 300), nil
 }

@@ -22,75 +22,59 @@ func uObjectEquals(a *lang.Object, b *lang.Object) (bool, error) {
 	return true, nil
 }
 
-func cEquals(args []*lang.Object) (bool, error) {
-	for _, a := range args {
-		for _, b := range args[1:] {
-			eq, err := uObjectEquals(a, b)
-			if err != nil {
-				return false, err
-			}
-			if !eq {
-				return false, nil
-			}
-		}
+func cEquals(a *lang.Object, b *lang.Object) (bool, error) {
+	eq, err := uObjectEquals(a, b)
+	if err != nil {
+		return false, err
+	}
+	if !eq {
+		return false, nil
 	}
 	return true, nil
 }
 
-func cNotEquals(args []*lang.Object) (bool, error) {
-	eq, err := cEquals(args)
+func cNotEquals(a *lang.Object, b *lang.Object) (bool, error) {
+	eq, err := cEquals(a, b)
 	return !eq, err
 }
 
-func cLike(args []*lang.Object) (bool, error) {
-	if len(args) < 1 {
-		return false, moreArgs.Get("need at least 1 argument")
-	}
+func cLike(a *lang.Object, b *lang.Object) (bool, error) {
 	// type we will try to convert other objects to
-	tt := args[0].Type
+	tt := a.Type
 	// a & b after cast to target type
 	var ac *lang.Object
 	var bc *lang.Object
 	// used for type conversions
 	var ok bool
 
-	for _, a := range args {
-		for _, b := range args[1:] {
-			if a.Type == tt {
-				ac = a
-			} else {
-				ac, ok = a.TryConvert(tt)
-				if !ok {
-					return false, errors.New("could not convert type")
-				}
-			}
-			if b.Type == tt {
-				bc = b
-			} else {
-				bc, ok = b.TryConvert(tt)
-				if !ok {
-					return false, errors.New("could not convert type")
-				}
-			}
-			eq, err := uObjectEquals(ac, bc)
-			if err != nil {
-				return false, err
-			}
-			if !eq {
-				return false, nil
-			}
+	if a.Type == tt {
+		ac = a
+	} else {
+		ac, ok = a.TryConvert(tt)
+		if !ok {
+			return false, errors.New("could not convert type")
 		}
+	}
+	if b.Type == tt {
+		bc = b
+	} else {
+		bc, ok = b.TryConvert(tt)
+		if !ok {
+			return false, errors.New("could not convert type")
+		}
+	}
+	eq, err := uObjectEquals(ac, bc)
+	if err != nil {
+		return false, err
+	}
+	if !eq {
+		return false, nil
 	}
 
 	return true, nil
 }
 
-func cGreater(args []*lang.Object) (bool, error) {
-	if len(args) < 2 {
-		return false, moreArgs.Get("need at least 2 arguments to compare")
-	}
-	a := args[0]
-	b := args[1]
+func cGreater(a *lang.Object, b *lang.Object) (bool, error) {
 	if a.Type != b.Type {
 		return false, badType.Get("both arguments must be the same type")
 	}
@@ -100,12 +84,7 @@ func cGreater(args []*lang.Object) (bool, error) {
 	return a.IntV > b.IntV, nil
 }
 
-func cLesser(args []*lang.Object) (bool, error) {
-	if len(args) < 2 {
-		return false, moreArgs.Get("need at least 2 arguments to compare")
-	}
-	a := args[0]
-	b := args[1]
+func cLesser(a *lang.Object, b *lang.Object) (bool, error) {
 	if a.Type != b.Type {
 		return false, badType.Get("both arguments must be the same type")
 	}

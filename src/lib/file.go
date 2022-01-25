@@ -66,26 +66,26 @@ func fFileRename(args []*lang.Object) (*lang.Object, error) {
 	return lang.NewNil(), os.Rename(oldName, newName)
 }
 
-func cFileExists(args []*lang.Object) (bool, error) {
+func fFileExists(args []*lang.Object) (*lang.Object, error) {
 	var fileName string
 	if len(args) < 1 {
-		return false, moreArgs.Get("need file name")
+		return lang.NewNil(), moreArgs.Get("need file name")
 	}
 	fileObj := args[0]
 	if fileObj.Type != lang.ObjStr {
-		return false, badType.Get("file name must be a string")
+		return lang.NewNil(), badType.Get("file name must be a string")
 	}
 	fileName = fileObj.StrV
 
 	f, err := os.Open(fileName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return false, nil
+			return lang.NewBool(false), nil
 		}
-		return false, err
+		return lang.NewNil(), err
 	}
 	f.Close()
-	return true, nil
+	return lang.NewBool(true), nil
 }
 
 func fWalk(args []*lang.Object) (*lang.Object, error) {

@@ -19,7 +19,11 @@ var streams = make(map[string]Stream)
 var streamsSoFar = 1
 var lastStream = ""
 
-func pDataRead(arg *lang.Object) (*lang.Object, error) {
+func fDataRead(args []*lang.Object) (*lang.Object, error) {
+	if len(args) < 1 {
+		return lang.NewNil(), moreArgs.Get("need input")
+	}
+	arg := args[0]
 	var amt int
 	var streamName string
 	if arg.Type != lang.ObjInt {

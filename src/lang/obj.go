@@ -153,3 +153,10 @@ func NewNil() *Object {
 		Type: ObjNil,
 	}
 }
+
+func NewBool(val bool) *Object {
+	return &Object{
+		Type:  ObjBool,
+		BoolV: val,
+	}
+}

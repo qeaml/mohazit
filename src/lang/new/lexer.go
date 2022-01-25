@@ -1,6 +1,7 @@
 package new
 
 import (
+	"mohazit/lang"
 	"mohazit/lib"
 )
 
@@ -105,7 +106,7 @@ func (l *Lexer) Next() (*Token, error) {
 	for !isSpace(l.peek()) && l.peek() != '\r' && l.peek() != '\n' {
 		dump += toString(l.advance())
 	}
-	for _, op := range operators {
+	for op := range lang.Comps {
 		if dump == op {
 			return &Token{tOper, dump}, nil
 		}
@@ -116,8 +117,4 @@ func (l *Lexer) Next() (*Token, error) {
 
 func (l *Lexer) Has() bool {
 	return l.pos != len(l.source)
-}
-
-var operators = []string{
-	"=",
 }
