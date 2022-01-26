@@ -87,3 +87,19 @@ func TestInterpreter(t *testing.T) {
 		}
 	}
 }
+
+func TestIf(t *testing.T) {
+	lib.Load()
+	gt = t
+	gi = new.NewInterpreter("unless 1 == 3\nsay aa\nsay bb\nelse\nsay dd\nend")
+	for {
+		cont, err := gi.Do()
+		if !cont {
+			break
+		}
+		if err != nil {
+			t.Fatal(err.Error())
+			break
+		}
+	}
+}
