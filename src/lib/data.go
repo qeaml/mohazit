@@ -176,6 +176,7 @@ func fDataStream(args []*lang.Object) (*lang.Object, error) {
 	fmt.Printf("opening stream `%s`\n", streamName)
 
 	streams[streamName] = &BufferStream{}
+	lastStream = streamName
 	return lang.NewStr(streamName), nil
 }
 
