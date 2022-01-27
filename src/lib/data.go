@@ -165,7 +165,12 @@ func fFileOpen(args []*lang.Object) (*lang.Object, error) {
 }
 
 func fDataStream(args []*lang.Object) (*lang.Object, error) {
-	streamName := fmt.Sprintf("buffer%d", streamsSoFar)
+	var streamName string
+	if len(args) == 0 {
+		streamName = fmt.Sprintf("buffer%d", streamsSoFar)
+	} else {
+		streamName = args[0].String()
+	}
 	streamsSoFar++
 
 	fmt.Printf("opening stream `%s`\n", streamName)
