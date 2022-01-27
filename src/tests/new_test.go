@@ -13,8 +13,10 @@ var gp *new.Parser
 var gi *new.Interpreter
 
 func TestLexer(t *testing.T) {
+	lib.Load()
 	gt = t
-	gl = new.NewLexer("var test = 123\n")
+	gl = new.NewLexer()
+	gl.Source("var test = 123")
 	expectToken(3, "var")  // ident
 	expectToken(0, " ")    // space
 	expectToken(3, "test") // ident
@@ -30,7 +32,11 @@ func expectToken(tt new.TokenType, tr string) {
 	if err != nil {
 		gt.Fatal(err.Error())
 	}
+	if tkn == nil {
+		return
+	}
 	gt.Logf("%s token: %s", tkn.Type.String(), tkn.Raw)
+	gt.Logf("%d", int(tkn.Raw[0]))
 	if tkn.Type != tt {
 		gt.Fatalf("wrong type, got %s, want %s",
 			tkn.Type.String(), tt.String())
@@ -42,9 +48,10 @@ func expectToken(tt new.TokenType, tr string) {
 }
 
 func TestParser(t *testing.T) {
+	lib.Load()
 	gt = t
-	gl = new.NewLexer("var test = 123")
-	gp = new.NewParser(gl)
+	gp = new.NewParser()
+	gp.Source("var test = 123")
 	expectStatement("var", 0, 3, 0, 4, 0, 2)
 }
 
@@ -75,7 +82,8 @@ func expectStatement(kw string, args ...new.TokenType) {
 func TestInterpreter(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
+	gi = new.NewInterpreter()
+	gi.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
 	for {
 		cont, err := gi.Do()
 		if !cont {
@@ -91,7 +99,8 @@ func TestInterpreter(t *testing.T) {
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter("unless 1 == 3\nsay aa\nsay bb\nelse\nsay dd\nend")
+	gi = new.NewInterpreter()
+	gi.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
 	for {
 		cont, err := gi.Do()
 		if !cont {

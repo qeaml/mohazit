@@ -9,9 +9,7 @@ import (
 )
 
 var (
-	notEnough = lib.LazyError("parser: need more tokens (got %s, want 1)", "npar_notenough")
-	notIdent  = lib.LazyError("parser: unexpected token (got %s, want 3)", "npar_notident")
-	badKw     = lib.LazyError("parser: unknown keyword: %s", "npar_badkw")
+	notIdent = lib.LazyError("parser: unexpected token (got %s, want ident)", "npar_notident")
 )
 
 type Statement struct {
@@ -23,8 +21,12 @@ type Parser struct {
 	lexer *Lexer
 }
 
-func NewParser(lexer *Lexer) *Parser {
-	return &Parser{lexer}
+func NewParser() *Parser {
+	return &Parser{NewLexer()}
+}
+
+func (p *Parser) Source(src string) {
+	p.lexer.Source(src)
 }
 
 func (p *Parser) tokens() ([]*Token, error) {
@@ -36,12 +38,15 @@ func (p *Parser) tokens() ([]*Token, error) {
 		if err != nil {
 			return nil, err
 		}
+		if t == nil {
+			continue
+		}
 		out = append(out, t)
 		if t.Type == tLinefeed {
 			return out, nil
 		}
 	}
-	return out, nil
+	return p.TrimSpace(out), nil
 }
 
 func (p *Parser) Next() (*Statement, error) {
@@ -93,4 +98,51 @@ func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
 		ctx = ""
 	}
 	return out, nil
+}
+
+func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
+	t = p.TrimSpace(t)
+	switch t[0].Type {
+	case tIdent, tInvalid:
+		v := lang.NewStr(t[0].Raw)
+		for i := 0; i < len(t); i++ {
+			tkn := t[i]
+			switch tkn.Type {
+			case tIdent, tInvalid, tSpace:
+				v.StrV += tkn.Raw
+			default:
+				return lang.NewNil(), unexTkn.Get(tkn.Type.String())
+			}
+		}
+		return v, nil
+	case tLiteral:
+		v, err := strconv.Atoi(t[0].Raw)
+		return lang.NewInt(v), err
+	default:
+		return lang.NewNil(), unexTkn.Get(t[0].Type.String())
+	}
+}
+
+func (p *Parser) TrimSpace(t []*Token) []*Token {
+	ltrim := []*Token{}
+	ignore := true
+	for _, tkn := range t {
+		if tkn.Type != tSpace && ignore {
+			ignore = false
+		}
+		if !ignore {
+			ltrim = append(ltrim, tkn)
+		}
+	}
+	rtrim := []*Token{}
+	ignore = true
+	for i := len(ltrim) - 1; i >= 0; i-- {
+		if ltrim[i].Type != tSpace && ignore {
+			ignore = false
+		}
+		if !ignore {
+			rtrim = append([]*Token{ltrim[i]}, rtrim...)
+		}
+	}
+	return rtrim
 }

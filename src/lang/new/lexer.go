@@ -2,11 +2,6 @@ package new
 
 import (
 	"mohazit/lang"
-	"mohazit/lib"
-)
-
-var (
-	badToken = lib.LazyError("lexer: invalid token `%s`", "nlex_badtoken")
 )
 
 type TokenType uint8
@@ -47,8 +42,13 @@ type Lexer struct {
 	pos    int
 }
 
-func NewLexer(source string) *Lexer {
-	return &Lexer{source, 0}
+func NewLexer() *Lexer {
+	return &Lexer{"", 0}
+}
+
+func (l *Lexer) Source(src string) {
+	l.source = src
+	l.pos = 0
 }
 
 func (l *Lexer) peek() byte {
@@ -66,8 +66,9 @@ func (l *Lexer) peekNext() byte {
 }
 
 func (l *Lexer) advance() byte {
+	b := l.peek()
 	l.pos++
-	return l.source[l.pos-1]
+	return b
 }
 
 func (l *Lexer) Next() (*Token, error) {
@@ -103,7 +104,7 @@ func (l *Lexer) Next() (*Token, error) {
 	}
 
 	dump := ""
-	for !isSpace(l.peek()) && l.peek() != '\r' && l.peek() != '\n' {
+	for !isSpace(l.peek()) && l.peek() != '\r' && l.peek() != '\n' && l.peek() != 0 {
 		dump += toString(l.advance())
 	}
 	for op := range lang.Comps {
@@ -111,8 +112,11 @@ func (l *Lexer) Next() (*Token, error) {
 			return &Token{tOper, dump}, nil
 		}
 	}
-	return nil, badToken.Get(dump)
-	// return &Token{tInvalid, dump}, nil
+	if len(dump) == 0 {
+		return nil, nil
+	}
+	// return nil, badToken.Get(dump)
+	return &Token{tInvalid, dump}, nil
 }
 
 func (l *Lexer) Has() bool {

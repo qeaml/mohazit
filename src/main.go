@@ -33,7 +33,8 @@ func main() {
 			fmt.Println(err.Error())
 			os.Exit(eRead)
 		}
-		i := new.NewInterpreter(string(s))
+		i := new.NewInterpreter()
+		i.Source(string(s))
 		for {
 			cont, err := i.Do()
 			if !cont {
