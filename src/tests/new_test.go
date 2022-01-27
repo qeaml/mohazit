@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"mohazit/lang"
 	"mohazit/lang/new"
 	"mohazit/lib"
 
@@ -116,4 +117,32 @@ func TestIf(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+}
+
+func TestVar(t *testing.T) {
+	lib.Load()
+	gt = t
+	gi = new.NewInterpreter()
+	gi.Source("global i = 123\nvar j = 321\nset k=101010")
+	_, err := gi.Do()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("i", lang.NewInt(123))
+	expectGlobalVariable("j", lang.NewInt(321))
+	expectGlobalVariable("k", lang.NewInt(101010))
+}
+
+func expectGlobalVariable(name string, value *lang.Object) {
+	o, ok := gi.GetGlobal(name)
+	if !ok {
+		gt.Fatalf("global varialbe %s does not exist", name)
+	}
+	if !o.Equals(value) {
+		gt.Fatalf("global variables has value %s, but %s was expected",
+			o.Repr(), value.Repr())
+	}
+	gt.Logf("found expected variable %s with expected value %s",
+		name, value.Repr())
 }

@@ -1,6 +1,7 @@
 package new
 
 import (
+	"fmt"
 	"mohazit/lang"
 )
 
@@ -35,6 +36,10 @@ func (t TokenType) String() string {
 type Token struct {
 	Type TokenType
 	Raw  string
+}
+
+func (t *Token) String() string {
+	return fmt.Sprintf("<%s `%s`>", t.Type.String(), t.Raw)
 }
 
 // Lexer splits the input string into individual tokens
@@ -113,7 +118,7 @@ func (l *Lexer) Next() (*Token, error) {
 	}
 
 	dump := ""
-	for !isSpace(l.peek()) && l.peek() != '\r' && l.peek() != '\n' && l.peek() != 0 {
+	for !isSpace(l.peek()) && !isDigit(l.peek()) && l.peek() != '\r' && l.peek() != '\n' && l.peek() != 0 {
 		dump += toString(l.advance())
 	}
 	for op := range lang.Comps {

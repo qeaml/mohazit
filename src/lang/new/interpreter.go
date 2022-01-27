@@ -1,6 +1,7 @@
 package new
 
 import (
+	"fmt"
 	"mohazit/lang"
 	"mohazit/lib"
 )
@@ -63,6 +64,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
+	ifLoop:
 		for _, tkn := range stmt.Args {
 			if op == nil {
 				switch tkn.Type {
@@ -71,7 +73,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				case tOper:
 					op = tkn
 				case tLinefeed:
-					break
+					break ifLoop
 				default:
 					return unexTkn.Get(tkn.Type.String())
 				}
@@ -82,7 +84,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				case tOper:
 					return unimpl.Get("operator chaining")
 				case tLinefeed:
-					break
+					break ifLoop
 				default:
 					return unexTkn.Get(tkn.Type.String())
 				}
@@ -132,6 +134,66 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		return nil
 	case "end":
 		return unex.Get("end")
+	case "local", "global", "var", "set":
+		l := []*Token{}
+		mid := false
+		r := []*Token{}
+	varLoop:
+		for _, tkn := range stmt.Args {
+			if !mid {
+				switch tkn.Type {
+				case tIdent, tLiteral, tSpace:
+					l = append(l, tkn)
+				case tOper:
+					if tkn.Raw == "=" {
+						mid = true
+					} else {
+						return unex.Get("operator " + tkn.Raw)
+					}
+				case tLinefeed:
+					break varLoop
+				default:
+					return unex.Get(tkn.Type.String())
+				}
+			} else {
+				switch tkn.Type {
+				case tIdent, tLiteral, tSpace:
+					r = append(r, tkn)
+				case tLinefeed:
+					break varLoop
+				default:
+					return unex.Get(tkn.Type.String())
+				}
+			}
+		}
+		l = i.parser.TrimSpace(l)
+		if len(l) > 1 {
+			return unex.Get(fmt.Sprint(len(l)-1) + " tokens before =")
+		}
+		lVal := l[0]
+		if lVal.Type != tIdent {
+			fmt.Println(l)
+			return unex.Get(lVal.Type.String())
+		}
+		rVal, err := i.parser.Tokens2object(r)
+		if err != nil {
+			return err
+		}
+		if stmt.Keyword == "local" {
+			if !isLocal {
+				return unex.Get("local variable in global context")
+			}
+			i.locals[lVal.Raw] = rVal
+		} else if stmt.Keyword == "global" {
+			i.globals[lVal.Raw] = rVal
+		} else {
+			if isLocal {
+				i.locals[lVal.Raw] = rVal
+			} else {
+				i.globals[lVal.Raw] = rVal
+			}
+		}
+		return nil
 	default:
 		f, ok := lang.Funcs[stmt.Keyword]
 		if !ok {
@@ -145,4 +207,9 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		return err
 		// TODO(qeaml): variables, labels and other special statements
 	}
+}
+
+func (i *Interpreter) GetGlobal(name string) (v *lang.Object, ok bool) {
+	v, ok = i.globals[name]
+	return
 }

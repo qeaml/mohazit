@@ -160,3 +160,24 @@ func NewBool(val bool) *Object {
 		BoolV: val,
 	}
 }
+
+func (a *Object) Equals(b *Object) bool {
+	if a.Type != b.Type {
+		return false
+	}
+	switch a.Type {
+	case ObjNil:
+		return true // nils are always equal
+	case ObjInt:
+		return a.IntV == b.IntV
+	case ObjBool:
+		return a.BoolV == b.BoolV
+	case ObjStr:
+		return a.StrV == b.StrV
+	case ObjRef:
+		// two refs to the same variable will have the same effective value
+		return a.RefV == b.RefV
+	default:
+		return false // invalid objects can never be equal
+	}
+}
