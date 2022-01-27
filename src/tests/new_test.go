@@ -96,19 +96,24 @@ func TestInterpreter(t *testing.T) {
 	}
 }
 
+func TestCall(t *testing.T) {
+	lib.Load()
+	gt = t
+	gi = new.NewInterpreter()
+	gi.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
+	_, err := gi.Do()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
 	gi = new.NewInterpreter()
 	gi.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
-	for {
-		cont, err := gi.Do()
-		if !cont {
-			break
-		}
-		if err != nil {
-			t.Fatal(err.Error())
-			break
-		}
+	_, err := gi.Do()
+	if err != nil {
+		t.Fatal(err.Error())
 	}
 }
