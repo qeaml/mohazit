@@ -16,17 +16,19 @@ var (
 // Interpreter reads statements from it's internal Parser and exectures them
 // also stores global/local variables and lables
 type Interpreter struct {
-	parser *Parser
-	vars   map[string]*lang.Object
-	labels map[string][]Statement
+	parser  *Parser
+	globals map[string]*lang.Object
+	locals  map[string]*lang.Object
+	labels  map[string][]Statement
 }
 
 // NewInterpreter creates an empty Interpreter, which has no code to run
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
-		parser: NewParser(),
-		vars:   make(map[string]*lang.Object),
-		labels: make(map[string][]Statement),
+		parser:  NewParser(),
+		globals: make(map[string]*lang.Object),
+		locals:  make(map[string]*lang.Object),
+		labels:  make(map[string][]Statement),
 	}
 }
 
@@ -47,16 +49,17 @@ func (i *Interpreter) Do() (ok bool, err error) {
 		if stmt == nil {
 			return false, nil
 		}
-		if err = i.exec(stmt); err != nil {
-			return true, i.exec(stmt)
+		if err = i.exec(stmt, false); err != nil {
+			return true, err
 		}
 	}
 }
 
 // exec runs a singular statement, consuming more statements if necessary
-func (i *Interpreter) exec(stmt *Statement) error {
+func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 	switch stmt.Keyword {
 	case "if", "unless":
+		i.locals = make(map[string]*lang.Object)
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
@@ -119,7 +122,7 @@ func (i *Interpreter) exec(stmt *Statement) error {
 				return nil
 			default:
 				if v {
-					err := i.exec(substmt)
+					err := i.exec(substmt, true)
 					if err != nil {
 						return err
 					}
