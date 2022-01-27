@@ -13,12 +13,15 @@ var (
 	unimpl   = lib.LazyError("interpreter: %s unimplemented", "nint_unimpl")
 )
 
+// Interpreter reads statements from it's internal Parser and exectures them
+// also stores global/local variables and lables
 type Interpreter struct {
 	parser *Parser
 	vars   map[string]*lang.Object
 	labels map[string][]Statement
 }
 
+// NewInterpreter creates an empty Interpreter, which has no code to run
 func NewInterpreter() *Interpreter {
 	return &Interpreter{
 		parser: NewParser(),
@@ -27,11 +30,15 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
+// Source gives this Interpreter some code to run
 func (i *Interpreter) Source(src string) {
 	i.parser.Source(src)
 }
 
-func (i *Interpreter) Do() (bool, error) {
+// Do runs as many statements as possible, stopping if there's a problem
+// reading the next statement (first value will be false) or if there's a
+// problem executing said statement (first value will be true)
+func (i *Interpreter) Do() (ok bool, err error) {
 	for {
 		stmt, err := i.parser.Next()
 		if err != nil {
@@ -46,6 +53,7 @@ func (i *Interpreter) Do() (bool, error) {
 	}
 }
 
+// exec runs a singular statement, consuming more statements if necessary
 func (i *Interpreter) exec(stmt *Statement) error {
 	switch stmt.Keyword {
 	case "if", "unless":

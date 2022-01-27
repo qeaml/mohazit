@@ -37,20 +37,25 @@ type Token struct {
 	Raw  string
 }
 
+// Lexer splits the input string into individual tokens
 type Lexer struct {
 	source string
 	pos    int
 }
 
+// NewLexer creates an empty Lexer with an empty input string
 func NewLexer() *Lexer {
 	return &Lexer{"", 0}
 }
 
+// Source sets this Lexer's input string
 func (l *Lexer) Source(src string) {
 	l.source = src
 	l.pos = 0
 }
 
+// peek returns the current character WITHOUT advancing the internal pointer.
+// Returns 0 if there are no more readable characters.
 func (l *Lexer) peek() byte {
 	if l.pos >= len(l.source) {
 		return 0
@@ -58,6 +63,7 @@ func (l *Lexer) peek() byte {
 	return l.source[l.pos]
 }
 
+// peekNext is the same as peek, but returns the next character over instead
 func (l *Lexer) peekNext() byte {
 	if l.pos >= len(l.source)-1 {
 		return 0
@@ -65,12 +71,15 @@ func (l *Lexer) peekNext() byte {
 	return l.source[l.pos+1]
 }
 
+// advance is the same as peek, but DOES advance the internal pointer
 func (l *Lexer) advance() byte {
 	b := l.peek()
 	l.pos++
 	return b
 }
 
+// Next returns the next token in the input string, or nil if there are no
+// more tokens left
 func (l *Lexer) Next() (*Token, error) {
 	if isSpace(l.peek()) {
 		return &Token{tSpace, toString(l.advance())}, nil
@@ -119,6 +128,7 @@ func (l *Lexer) Next() (*Token, error) {
 	return &Token{tInvalid, dump}, nil
 }
 
+// Has returns true if there may be more tokens in the input string
 func (l *Lexer) Has() bool {
 	return l.pos != len(l.source)
 }

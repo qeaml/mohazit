@@ -17,18 +17,22 @@ type Statement struct {
 	Args    []*Token
 }
 
+// Parser reads it's Lexer's tokens and turns them into individual statements
 type Parser struct {
 	lexer *Lexer
 }
 
+// NewParser creates an empty Parser with an empty input string
 func NewParser() *Parser {
 	return &Parser{NewLexer()}
 }
 
+// Source sets this Parser's input string
 func (p *Parser) Source(src string) {
 	p.lexer.Source(src)
 }
 
+// toknes reads and returns the tokens of the next statement
 func (p *Parser) tokens() ([]*Token, error) {
 	out := []*Token{}
 	var t *Token
@@ -49,6 +53,7 @@ func (p *Parser) tokens() ([]*Token, error) {
 	return p.TrimSpace(out), nil
 }
 
+// Next reads and returns the next statement in the input string
 func (p *Parser) Next() (*Statement, error) {
 	raw, err := p.tokens()
 	if err != nil {
@@ -69,6 +74,7 @@ func (p *Parser) Next() (*Statement, error) {
 	return &Statement{kw, args}, nil
 }
 
+// Args reads a slice of objects from the given token slice
 func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
 	out := []*lang.Object{}
 	ctx := ""
@@ -100,6 +106,7 @@ func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
 	return out, nil
 }
 
+// Tokens2object reads a single object from the given token slice
 func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 	t = p.TrimSpace(t)
 	switch t[0].Type {
@@ -123,6 +130,7 @@ func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 	}
 }
 
+// TrimSpace removes tSpace tokens from both ends of the given token slice
 func (p *Parser) TrimSpace(t []*Token) []*Token {
 	ltrim := []*Token{}
 	ignore := true
