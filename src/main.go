@@ -41,7 +41,12 @@ func main() {
 				break
 			}
 			if err != nil {
-				fmt.Println(err.Error())
+				if perr, ok := err.(*new.ParseError); ok {
+					fmt.Printf("%s:%d:%d [ERROR] %s",
+						os.Args[1], perr.Where.Line, perr.Where.Col, perr.Error())
+				} else {
+					fmt.Println(err.Error())
+				}
 				os.Exit(eScript)
 			}
 		}
