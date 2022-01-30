@@ -35,23 +35,27 @@ func (t TokenType) String() string {
 }
 
 type Token struct {
+	Line uint
+	Col  uint
 	Type TokenType
 	Raw  string
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("<%s `%s`>", t.Type.String(), t.Raw)
+	return fmt.Sprintf("<%s `%s` at %d:%d>", t.Type.String(), t.Raw, t.Line, t.Col)
 }
 
 // Lexer splits the input string into individual tokens
 type Lexer struct {
+	line   uint
+	col    uint
 	source string
 	pos    int
 }
 
 // NewLexer creates an empty Lexer with an empty input string
 func NewLexer() *Lexer {
-	return &Lexer{"", 0}
+	return &Lexer{1, 1, "", 0}
 }
 
 // Source sets this Lexer's input string
@@ -88,18 +92,18 @@ func (l *Lexer) advance() byte {
 // more tokens left
 func (l *Lexer) Next() (*Token, error) {
 	if isSpace(l.peek()) {
-		return &Token{tSpace, toString(l.advance())}, nil
+		return l.tkn(tSpace, toString(l.advance())), nil
 	}
 
 	if l.peek() == '\r' && l.peekNext() == '\n' {
-		return &Token{tLinefeed, toString(l.advance()) + toString(l.advance())}, nil
+		return l.tkn(tLinefeed, toString(l.advance())+toString(l.advance())), nil
 	}
 	if l.peek() == '\n' {
-		return &Token{tLinefeed, toString(l.advance())}, nil
+		return l.tkn(tLinefeed, toString(l.advance())), nil
 	}
 
 	if isBracket(l.peek()) {
-		return &Token{tBracket, toString(l.advance())}, nil
+		return l.tkn(tBracket, toString(l.advance())), nil
 	}
 
 	if isIdentStart(l.peek()) {
@@ -107,7 +111,7 @@ func (l *Lexer) Next() (*Token, error) {
 		for isIdentCont(l.peek()) {
 			ident += toString(l.advance())
 		}
-		return &Token{tIdent, ident}, nil
+		return l.tkn(tIdent, ident), nil
 	}
 
 	if isDigit(l.peek()) || l.peek() == '-' {
@@ -115,11 +119,11 @@ func (l *Lexer) Next() (*Token, error) {
 		for isDigit(l.peek()) {
 			literal += toString(l.advance())
 		}
-		return &Token{tLiteral, literal}, nil
+		return l.tkn(tLiteral, literal), nil
 	}
 
 	if l.peek() == '\\' && l.peekNext() == ' ' {
-		return &Token{tOper, toString(l.advance())}, nil
+		return l.tkn(tOper, toString(l.advance())), nil
 	}
 
 	dump := ""
@@ -128,17 +132,27 @@ func (l *Lexer) Next() (*Token, error) {
 	}
 	for op := range lang.Comps {
 		if dump == op {
-			return &Token{tOper, dump}, nil
+			return l.tkn(tOper, dump), nil
 		}
 	}
 	if len(dump) == 0 {
 		return nil, nil
 	}
 	// return nil, badToken.Get(dump)
-	return &Token{tInvalid, dump}, nil
+	return l.tkn(tInvalid, dump), nil
 }
 
 // Has returns true if there may be more tokens in the input string
 func (l *Lexer) Has() bool {
 	return l.pos != len(l.source)
+}
+
+func (l *Lexer) tkn(t TokenType, r string) *Token {
+	token := &Token{l.line, l.col, t, r}
+	if t == tLinefeed {
+		l.line++
+		l.col = 0
+	}
+	l.col += uint(len(r))
+	return token
 }

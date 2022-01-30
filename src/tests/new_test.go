@@ -36,8 +36,7 @@ func expectToken(tt new.TokenType, tr string) {
 	if tkn == nil {
 		return
 	}
-	gt.Logf("%s token: %s", tkn.Type.String(), tkn.Raw)
-	gt.Logf("%d", int(tkn.Raw[0]))
+	gt.Log(tkn.String())
 	if tkn.Type != tt {
 		gt.Fatalf("wrong type, got %s, want %s",
 			tkn.Type.String(), tt.String())
