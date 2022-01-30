@@ -29,10 +29,7 @@ func TestLexer(t *testing.T) {
 }
 
 func expectToken(tt new.TokenType, tr string) {
-	tkn, err := gl.Next()
-	if err != nil {
-		gt.Fatal(err.Error())
-	}
+	tkn := gl.Next()
 	if tkn == nil {
 		return
 	}

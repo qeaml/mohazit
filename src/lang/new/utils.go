@@ -43,3 +43,16 @@ func isCloseBracket(c byte) bool {
 func toString(c byte) string {
 	return string(rune(c))
 }
+
+type ParseError struct {
+	Where *Token
+	msg   string
+}
+
+func perr(tkn *Token, msg string) error {
+	return &ParseError{tkn, msg}
+}
+
+func (p *ParseError) Error() string {
+	return p.msg
+}

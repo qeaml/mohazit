@@ -33,32 +33,25 @@ func (p *Parser) Source(src string) {
 }
 
 // toknes reads and returns the tokens of the next statement
-func (p *Parser) tokens() ([]*Token, error) {
+func (p *Parser) tokens() []*Token {
 	out := []*Token{}
 	var t *Token
-	var err error
 	for p.lexer.Has() {
-		t, err = p.lexer.Next()
-		if err != nil {
-			return nil, err
-		}
+		t = p.lexer.Next()
 		if t == nil {
 			continue
 		}
 		out = append(out, t)
 		if t.Type == tLinefeed {
-			return out, nil
+			return out
 		}
 	}
-	return p.TrimSpace(out), nil
+	return p.TrimSpace(out)
 }
 
 // Next reads and returns the next statement in the input string
 func (p *Parser) Next() (*Statement, error) {
-	raw, err := p.tokens()
-	if err != nil {
-		return nil, err
-	}
+	raw := p.tokens()
 	if len(raw) < 1 {
 		return nil, nil
 	}
@@ -110,12 +103,12 @@ func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
 func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 	t = p.TrimSpace(t)
 	switch t[0].Type {
-	case tIdent, tInvalid:
+	case tIdent, tUnknown:
 		v := lang.NewStr(t[0].Raw)
 		for i := 0; i < len(t); i++ {
 			tkn := t[i]
 			switch tkn.Type {
-			case tIdent, tInvalid, tSpace:
+			case tIdent, tUnknown, tSpace:
 				v.StrV += tkn.Raw
 			default:
 				return lang.NewNil(), unexTkn.Get(tkn.Type.String())

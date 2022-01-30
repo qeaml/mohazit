@@ -90,20 +90,20 @@ func (l *Lexer) advance() byte {
 
 // Next returns the next token in the input string, or nil if there are no
 // more tokens left
-func (l *Lexer) Next() (*Token, error) {
+func (l *Lexer) Next() *Token {
 	if isSpace(l.peek()) {
-		return l.tkn(tSpace, toString(l.advance())), nil
+		return l.tkn(tSpace, toString(l.advance()))
 	}
 
 	if l.peek() == '\r' && l.peekNext() == '\n' {
-		return l.tkn(tLinefeed, toString(l.advance())+toString(l.advance())), nil
+		return l.tkn(tLinefeed, toString(l.advance())+toString(l.advance()))
 	}
 	if l.peek() == '\n' {
-		return l.tkn(tLinefeed, toString(l.advance())), nil
+		return l.tkn(tLinefeed, toString(l.advance()))
 	}
 
 	if isBracket(l.peek()) {
-		return l.tkn(tBracket, toString(l.advance())), nil
+		return l.tkn(tBracket, toString(l.advance()))
 	}
 
 	if isIdentStart(l.peek()) {
@@ -111,7 +111,7 @@ func (l *Lexer) Next() (*Token, error) {
 		for isIdentCont(l.peek()) {
 			ident += toString(l.advance())
 		}
-		return l.tkn(tIdent, ident), nil
+		return l.tkn(tIdent, ident)
 	}
 
 	if isDigit(l.peek()) || l.peek() == '-' {
@@ -119,11 +119,11 @@ func (l *Lexer) Next() (*Token, error) {
 		for isDigit(l.peek()) {
 			literal += toString(l.advance())
 		}
-		return l.tkn(tLiteral, literal), nil
+		return l.tkn(tLiteral, literal)
 	}
 
 	if l.peek() == '\\' && l.peekNext() == ' ' {
-		return l.tkn(tOper, toString(l.advance())), nil
+		return l.tkn(tOper, toString(l.advance()))
 	}
 
 	dump := ""
@@ -132,14 +132,13 @@ func (l *Lexer) Next() (*Token, error) {
 	}
 	for op := range lang.Comps {
 		if dump == op {
-			return l.tkn(tOper, dump), nil
+			return l.tkn(tOper, dump)
 		}
 	}
 	if len(dump) == 0 {
-		return nil, nil
+		return nil
 	}
-	// return nil, badToken.Get(dump)
-	return l.tkn(tUnknown, dump), nil
+	return l.tkn(tUnknown, dump)
 }
 
 // Has returns true if there may be more tokens in the input string
