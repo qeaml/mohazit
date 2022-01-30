@@ -14,7 +14,7 @@ const (
 	tIdent
 	tOper
 	tBracket
-	tInvalid
+	tUnknown
 )
 
 func (t TokenType) String() string {
@@ -26,11 +26,11 @@ func (t TokenType) String() string {
 	case tLiteral:
 		return "literal"
 	case tIdent:
-		return "ident"
+		return "identifier"
 	case tOper:
-		return "oper"
+		return "operator"
 	default:
-		return "invalid"
+		return "unknown"
 	}
 }
 
@@ -139,7 +139,7 @@ func (l *Lexer) Next() (*Token, error) {
 		return nil, nil
 	}
 	// return nil, badToken.Get(dump)
-	return l.tkn(tInvalid, dump), nil
+	return l.tkn(tUnknown, dump), nil
 }
 
 // Has returns true if there may be more tokens in the input string
