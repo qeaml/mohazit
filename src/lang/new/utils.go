@@ -27,6 +27,18 @@ func isIdentCont(c byte) bool {
 	return isIdentStart(c) || isDigit(c) || c == '-' || c == '.'
 }
 
+func isBracket(c byte) bool {
+	return isOpenBracket(c) || isCloseBracket(c)
+}
+
+func isOpenBracket(c byte) bool {
+	return c == '(' || c == '[' || c == '{' || c == '<'
+}
+
+func isCloseBracket(c byte) bool {
+	return c == ')' || c == ']' || c == '}' || c == '>'
+}
+
 // toString turn the given byte into a 1-long string
 func toString(c byte) string {
 	return string(rune(c))

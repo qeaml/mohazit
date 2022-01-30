@@ -13,6 +13,7 @@ const (
 	tLiteral
 	tIdent
 	tOper
+	tBracket
 	tInvalid
 )
 
@@ -95,6 +96,10 @@ func (l *Lexer) Next() (*Token, error) {
 	}
 	if l.peek() == '\n' {
 		return &Token{tLinefeed, toString(l.advance())}, nil
+	}
+
+	if isBracket(l.peek()) {
+		return &Token{tBracket, toString(l.advance())}, nil
 	}
 
 	if isIdentStart(l.peek()) {
