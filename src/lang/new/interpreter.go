@@ -3,15 +3,6 @@ package new
 import (
 	"fmt"
 	"mohazit/lang"
-	"mohazit/lib"
-)
-
-var (
-	missFunc = lib.LazyError("interpreter: unknown function %s", "nint_missfun")
-	missComp = lib.LazyError("interpreter: unknown comparator %s", "nint_misscomp")
-	unexTkn  = lib.LazyError("interpreter: unexpected %s token", "nint_unextkn")
-	unex     = lib.LazyError("interpreter: unexpected %s", "nint_unex")
-	unimpl   = lib.LazyError("interpreter: %s unimplemented", "nint_unimpl")
 )
 
 // Interpreter reads statements from it's internal Parser and exectures them
@@ -75,18 +66,18 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				case tLinefeed:
 					break ifLoop
 				default:
-					return unexTkn.Get(tkn.Type.String())
+					return perrf(tkn, "unexpected %s", tkn.Type.String())
 				}
 			} else {
 				switch tkn.Type {
 				case tIdent, tLiteral, tSpace:
 					r = append(r, tkn)
 				case tOper:
-					return unimpl.Get("operator chaining")
+					return perr(tkn, "operator chaining not yet implemented")
 				case tLinefeed:
 					break ifLoop
 				default:
-					return unexTkn.Get(tkn.Type.String())
+					return perrf(tkn, "unexpected %s", tkn.Type.String())
 				}
 			}
 		}
@@ -100,7 +91,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		}
 		c, ok := lang.Comps[op.Raw]
 		if !ok {
-			return missComp.Get(op.Raw)
+			return perrf(op, "unknown comparator %s", op.Raw)
 		}
 		v, err := c(lVal, rVal)
 		if err != nil {
@@ -133,7 +124,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		}
 		return nil
 	case "end":
-		return unex.Get("end")
+		return perr(stmt.KwToken, "end statement outside of block")
 	case "local", "global", "var", "set":
 		l := []*Token{}
 		mid := false
@@ -148,12 +139,12 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 					if tkn.Raw == "=" {
 						mid = true
 					} else {
-						return unex.Get("operator " + tkn.Raw)
+						return perrf(tkn, "expected =, got %s", tkn.Raw)
 					}
 				case tLinefeed:
 					break varLoop
 				default:
-					return unex.Get(tkn.Type.String())
+					return perrf(tkn, "unexpected %s", tkn.Type.String())
 				}
 			} else {
 				switch tkn.Type {
@@ -162,18 +153,18 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				case tLinefeed:
 					break varLoop
 				default:
-					return unex.Get(tkn.Type.String())
+					return perrf(tkn, "unexpected %s", tkn.Type.String())
 				}
 			}
 		}
 		l = i.parser.TrimSpace(l)
 		if len(l) > 1 {
-			return unex.Get(fmt.Sprint(len(l)-1) + " tokens before =")
+			return perr(l[0], "too many tokens before =")
 		}
 		lVal := l[0]
 		if lVal.Type != tIdent {
 			fmt.Println(l)
-			return unex.Get(lVal.Type.String())
+			return perrf(lVal, "expected identifier, got %s", lVal.Type.String())
 		}
 		rVal, err := i.parser.Tokens2object(r)
 		if err != nil {
@@ -181,7 +172,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		}
 		if stmt.Keyword == "local" {
 			if !isLocal {
-				return unex.Get("local variable in global context")
+				return perr(stmt.KwToken, "local variable in global context")
 			}
 			i.locals[lVal.Raw] = rVal
 		} else if stmt.Keyword == "global" {
@@ -197,7 +188,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 	default:
 		f, ok := lang.Funcs[stmt.Keyword]
 		if !ok {
-			return missFunc.Get(stmt.Keyword)
+			return perrf(stmt.KwToken, "unknown function %s", stmt.Keyword)
 		}
 		args, err := i.parser.Args(stmt.Args)
 		if err != nil {

@@ -1,19 +1,14 @@
 package new
 
 import (
-	"fmt"
 	"mohazit/lang"
-	"mohazit/lib"
 	"strconv"
 	"strings"
 )
 
-var (
-	notIdent = lib.LazyError("parser: unexpected token (got %s, want ident)", "npar_notident")
-)
-
 type Statement struct {
 	Keyword string
+	KwToken *Token
 	Args    []*Token
 }
 
@@ -57,14 +52,14 @@ func (p *Parser) Next() (*Statement, error) {
 	}
 	kwToken := raw[0]
 	if kwToken.Type != tIdent {
-		return nil, notIdent.Get(fmt.Sprint(kwToken.Type))
+		return nil, perrf(kwToken, "expected identifier, got %s", kwToken.Type.String())
 	}
 	kw := strings.ToLower(kwToken.Raw)
 	args := []*Token{}
 	for i := 1; i < len(raw); i++ {
 		args = append(args, raw[i])
 	}
-	return &Statement{kw, args}, nil
+	return &Statement{kw, kwToken, args}, nil
 }
 
 // Args reads a slice of objects from the given token slice
@@ -111,7 +106,7 @@ func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 			case tIdent, tUnknown, tSpace:
 				v.StrV += tkn.Raw
 			default:
-				return lang.NewNil(), unexTkn.Get(tkn.Type.String())
+				return lang.NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
 			}
 		}
 		return v, nil
@@ -119,7 +114,7 @@ func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 		v, err := strconv.Atoi(t[0].Raw)
 		return lang.NewInt(v), err
 	default:
-		return lang.NewNil(), unexTkn.Get(t[0].Type.String())
+		return lang.NewNil(), perrf(t[0], "unexpected %s", t[0])
 	}
 }
 

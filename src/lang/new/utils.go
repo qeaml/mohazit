@@ -1,5 +1,7 @@
 package new
 
+import "fmt"
+
 // isSpace checks if the given byte represents a whitespace character
 func isSpace(c byte) bool {
 	return c == ' ' || c == '\t'
@@ -51,6 +53,10 @@ type ParseError struct {
 
 func perr(tkn *Token, msg string) error {
 	return &ParseError{tkn, msg}
+}
+
+func perrf(tkn *Token, msg string, args ...interface{}) error {
+	return &ParseError{tkn, fmt.Sprintf(msg, args...)}
 }
 
 func (p *ParseError) Error() string {
