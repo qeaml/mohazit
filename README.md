@@ -13,7 +13,7 @@ set num = limited-rng 10
 set guess = ask-number
 # compare
 # yes, i know that this doesn't look that good; i'm working on it
-if {num} [equals] {guess}
+if {num} = {guess}
     # that was a good guess!
     say Congratulations! You guessed the number!
 else
@@ -26,20 +26,24 @@ example with labels:
 
 ```rb
 label greater
+    # local variable, will be deleted after the 'end'
+    local what = greater
     say Woah!
-    say That number is greater than 10!
+    say That number is {what} than 10!
     goto bye
 end
 
 label lower
+    local what = lower
     say Well,
-    say That number is lower than or equal to 10.
+    say That number is {what} than or equal to 10.
     goto bye
 end
 
+# global variables, will never be deleted
 set num = ask-number
 set target = value 10
-if {num} [greater-than] {target}
+if {num} > {target}
     goto greater
 else
     goto lower
@@ -56,16 +60,16 @@ you aren't stuck with only `if` though:
 
 ```rb
 # bruh
-if this [equals]
+if this
 else
     say woop
 end
 # ==== INTRODUCING: THE UNLESS STATEMENT ====
-unless this [equals] that
+unless this = that
     say woop
 end
 # you can use else here too
-unless this [equals] that
+unless this = that
     say woop
 else
     say how??????
