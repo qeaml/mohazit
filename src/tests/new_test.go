@@ -99,11 +99,15 @@ func TestCall(t *testing.T) {
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
+	lang.Source("if 3 = 3\nglobal a-ok = 123\nend\nif 1 = 3\nsay whoa\nelse\nglobal b-ok = 123\nend\nunless 1 = 3\nglobal c-ok = 123\nend")
 	_, err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+
+	expectGlobalVariable("a-ok", lang.NewInt(123))
+	expectGlobalVariable("b-ok", lang.NewInt(123))
+	expectGlobalVariable("c-ok", lang.NewInt(123))
 }
 
 func TestVar(t *testing.T) {
