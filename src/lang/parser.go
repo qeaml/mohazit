@@ -60,7 +60,9 @@ func parseObjectList(tkns []*Token) ([]*Object, error) {
 				ctx += tkn.Raw
 			}
 		case tLiteral:
-			out = append(out, NewStr(strings.TrimSpace(ctx)))
+			if len(ctx) > 0 {
+				out = append(out, NewStr(strings.TrimSpace(ctx)))
+			}
 			ctx = ""
 			v, err := strconv.Atoi(tkn.Raw)
 			if err != nil {
@@ -82,6 +84,52 @@ func parseObjectList(tkns []*Token) ([]*Object, error) {
 func parseObject(t []*Token) (*Object, error) {
 	t = trimSpaceTokens(t)
 	switch t[0].Type {
+	case tBracket:
+		if t[0].Raw != "[" {
+			return NewNil(), perrf(t[0], "expected [, got %s", t[0].Raw)
+		}
+		funcnames := []*Token{}
+		argstart := 0
+	funcLoop:
+		for _, tkn := range t[1:] {
+			argstart++
+			switch tkn.Type {
+			case tIdent:
+				funcnames = append(funcnames, tkn)
+			case tSpace:
+				continue
+			case tBracket:
+				if tkn.Raw != "]" {
+					return NewNil(), perrf(tkn, "expected ], got %s", tkn.Raw)
+				}
+				break funcLoop
+			default:
+				return NewNil(), perrf(tkn, "unexpected %s in function list", tkn.Type.String())
+			}
+		}
+		funcfuncs := []VFunc{}
+		for _, fn := range funcnames {
+			if ff, ok := Funcs[strings.ToLower(fn.Raw)]; ok {
+				funcfuncs = append(funcfuncs, ff)
+			} else {
+				return NewNil(), perrf(fn, "unknown function %s", fn.Raw)
+			}
+		}
+		args, err := parseObjectList(trimSpaceTokens(t[argstart+1:]))
+		if err != nil {
+			return NewNil(), err
+		}
+		final, err := funcfuncs[0](args)
+		if err != nil {
+			return final, err
+		}
+		for _, f := range funcfuncs[1:] {
+			final, err = f([]*Object{final})
+			if err != nil {
+				return final, err
+			}
+		}
+		return final, nil
 	case tIdent, tUnknown:
 		v := NewStr(t[0].Raw)
 		for i := 0; i < len(t); i++ {

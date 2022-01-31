@@ -132,3 +132,20 @@ func expectGlobalVariable(name string, value *lang.Object) {
 	gt.Logf("found expected variable %s with expected value %s",
 		name, value.Repr())
 }
+
+func TestFunc(t *testing.T) {
+	lib.Load()
+	gt = t
+	lang.Source("global a = [inc] 10\nvar b = [dec] 101\n set c= [dec dec dec] 9")
+	_, err := lang.DoAll()
+	if err != nil {
+		if perr, ok := err.(*lang.ParseError); ok {
+			t.Logf("%s %s", perr.Where.String(), perr.Error())
+		}
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("a", lang.NewInt(11))
+	expectGlobalVariable("b", lang.NewInt(100))
+	expectGlobalVariable("c", lang.NewInt(6))
+}

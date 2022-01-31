@@ -28,6 +28,8 @@ func (t TokenType) String() string {
 		return "identifier"
 	case tOper:
 		return "operator"
+	case tBracket:
+		return "bracket"
 	default:
 		return "unknown"
 	}
@@ -118,7 +120,7 @@ func NextToken() *Token {
 	}
 
 	dump := ""
-	for !isSpace(peek()) && !isDigit(peek()) && peek() != '\r' && peek() != '\n' && peek() != 0 {
+	for !isSpace(peek()) && !isDigit(peek()) && !isBracket(peek()) && peek() != '\r' && peek() != '\n' && peek() != 0 {
 		dump += toString(advance())
 	}
 	for op := range Comps {

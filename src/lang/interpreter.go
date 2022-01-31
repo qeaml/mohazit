@@ -1,9 +1,5 @@
 package lang
 
-import (
-	"fmt"
-)
-
 var globals = make(map[string]*Object)
 var locals = make(map[string]*Object)
 var labels = make(map[string][]Statement)
@@ -114,7 +110,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		for _, tkn := range stmt.Args {
 			if !mid {
 				switch tkn.Type {
-				case tIdent, tLiteral, tSpace:
+				case tIdent, tSpace:
 					l = append(l, tkn)
 				case tOper:
 					if tkn.Raw == "=" {
@@ -129,7 +125,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				}
 			} else {
 				switch tkn.Type {
-				case tIdent, tLiteral, tSpace:
+				case tIdent, tLiteral, tSpace, tBracket:
 					r = append(r, tkn)
 				case tLinefeed:
 					break varLoop
@@ -144,7 +140,6 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		}
 		lVal := l[0]
 		if lVal.Type != tIdent {
-			fmt.Println(l)
 			return perrf(lVal, "expected identifier, got %s", lVal.Type.String())
 		}
 		rVal, err := parseObject(r)

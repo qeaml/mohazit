@@ -58,17 +58,18 @@ func (o *Object) Repr() string {
 }
 
 func (o *Object) String() string {
-	switch o.Type {
-	case ObjNil:
-		return "nil"
-	case ObjStr:
-		return o.StrV
-	case ObjInt:
-		return fmt.Sprint(o.IntV)
-	case ObjBool:
-		return fmt.Sprint(o.BoolV)
-	}
-	return "?"
+	return o.Repr()
+	// switch o.Type {
+	// case ObjNil:
+	// 	return "nil"
+	// case ObjStr:
+	// 	return o.StrV
+	// case ObjInt:
+	// 	return fmt.Sprint(o.IntV)
+	// case ObjBool:
+	// 	return fmt.Sprint(o.BoolV)
+	// }
+	// return "?"
 }
 
 func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
