@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"mohazit/lang/new"
+	"mohazit/lang"
 	"mohazit/lib"
 	"os"
 )
@@ -33,14 +33,14 @@ func main() {
 			fmt.Println(err.Error())
 			os.Exit(eRead)
 		}
-		new.Source(string(s))
+		lang.Source(string(s))
 		for {
-			cont, err := new.DoAll()
+			cont, err := lang.DoAll()
 			if !cont {
 				break
 			}
 			if err != nil {
-				if perr, ok := err.(*new.ParseError); ok {
+				if perr, ok := err.(*lang.ParseError); ok {
 					fmt.Printf("%s:%d:%d [ERROR] %s",
 						os.Args[1], perr.Where.Line, perr.Where.Col, perr.Error())
 				} else {

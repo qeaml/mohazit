@@ -1,8 +1,7 @@
-package new
+package lang
 
 import (
 	"fmt"
-	"mohazit/lang"
 )
 
 type TokenType uint8
@@ -122,7 +121,7 @@ func NextToken() *Token {
 	for !isSpace(peek()) && !isDigit(peek()) && peek() != '\r' && peek() != '\n' && peek() != 0 {
 		dump += toString(advance())
 	}
-	for op := range lang.Comps {
+	for op := range Comps {
 		if dump == op {
 			return makeToken(tOper, dump)
 		}

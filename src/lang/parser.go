@@ -1,7 +1,6 @@
-package new
+package lang
 
 import (
-	"mohazit/lang"
 	"strconv"
 	"strings"
 )
@@ -48,58 +47,58 @@ func NextStmt() (*Statement, error) {
 }
 
 // Args reads a slice of objects from the given token slice
-func parseObjectList(tkns []*Token) ([]*lang.Object, error) {
-	out := []*lang.Object{}
+func parseObjectList(tkns []*Token) ([]*Object, error) {
+	out := []*Object{}
 	ctx := ""
 	for _, tkn := range tkns {
 		switch tkn.Type {
 		case tOper:
 			if tkn.Raw == "\\" {
-				out = append(out, lang.NewStr(strings.TrimSpace(ctx)))
+				out = append(out, NewStr(strings.TrimSpace(ctx)))
 				ctx = ""
 			} else {
 				ctx += tkn.Raw
 			}
 		case tLiteral:
-			out = append(out, lang.NewStr(strings.TrimSpace(ctx)))
+			out = append(out, NewStr(strings.TrimSpace(ctx)))
 			ctx = ""
 			v, err := strconv.Atoi(tkn.Raw)
 			if err != nil {
 				return nil, err
 			}
-			out = append(out, lang.NewInt(v))
+			out = append(out, NewInt(v))
 		default:
 			ctx += tkn.Raw
 		}
 	}
 	if ctx != "" {
-		out = append(out, lang.NewStr(strings.TrimSpace(ctx)))
+		out = append(out, NewStr(strings.TrimSpace(ctx)))
 		ctx = ""
 	}
 	return out, nil
 }
 
 // Tokens2object reads a single object from the given token slice
-func parseObject(t []*Token) (*lang.Object, error) {
+func parseObject(t []*Token) (*Object, error) {
 	t = trimSpaceTokens(t)
 	switch t[0].Type {
 	case tIdent, tUnknown:
-		v := lang.NewStr(t[0].Raw)
+		v := NewStr(t[0].Raw)
 		for i := 0; i < len(t); i++ {
 			tkn := t[i]
 			switch tkn.Type {
 			case tIdent, tUnknown, tSpace:
 				v.StrV += tkn.Raw
 			default:
-				return lang.NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
+				return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
 			}
 		}
 		return v, nil
 	case tLiteral:
 		v, err := strconv.Atoi(t[0].Raw)
-		return lang.NewInt(v), err
+		return NewInt(v), err
 	default:
-		return lang.NewNil(), perrf(t[0], "unexpected %s", t[0])
+		return NewNil(), perrf(t[0], "unexpected %s", t[0])
 	}
 }
 

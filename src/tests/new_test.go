@@ -2,7 +2,6 @@ package tests
 
 import (
 	"mohazit/lang"
-	"mohazit/lang/new"
 	"mohazit/lib"
 
 	"testing"
@@ -13,7 +12,7 @@ var gt *testing.T
 func TestLexer(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("var test = 123")
+	lang.Source("var test = 123")
 	expectToken(3, "var")  // ident
 	expectToken(0, " ")    // space
 	expectToken(3, "test") // ident
@@ -24,8 +23,8 @@ func TestLexer(t *testing.T) {
 	expectToken(1, "\n")
 }
 
-func expectToken(tt new.TokenType, tr string) {
-	tkn := new.NextToken()
+func expectToken(tt lang.TokenType, tr string) {
+	tkn := lang.NextToken()
 	if tkn == nil {
 		return
 	}
@@ -43,12 +42,12 @@ func expectToken(tt new.TokenType, tr string) {
 func TestParser(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("var test = 123")
+	lang.Source("var test = 123")
 	expectStatement("var", 0, 3, 0, 4, 0, 2)
 }
 
-func expectStatement(kw string, args ...new.TokenType) {
-	stmt, err := new.NextStmt()
+func expectStatement(kw string, args ...lang.TokenType) {
+	stmt, err := lang.NextStmt()
 	if err != nil {
 		gt.Fatal(err.Error())
 	}
@@ -74,9 +73,9 @@ func expectStatement(kw string, args ...new.TokenType) {
 func TestInterpreter(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
+	lang.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
 	for {
-		cont, err := new.DoAll()
+		cont, err := lang.DoAll()
 		if !cont {
 			break
 		}
@@ -90,8 +89,8 @@ func TestInterpreter(t *testing.T) {
 func TestCall(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
-	_, err := new.DoAll()
+	lang.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
+	_, err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -100,8 +99,8 @@ func TestCall(t *testing.T) {
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
-	_, err := new.DoAll()
+	lang.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
+	_, err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -110,8 +109,8 @@ func TestIf(t *testing.T) {
 func TestVar(t *testing.T) {
 	lib.Load()
 	gt = t
-	new.Source("global i = 123\nvar j = 321\nset k=101010")
-	_, err := new.DoAll()
+	lang.Source("global i = 123\nvar j = 321\nset k=101010")
+	_, err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -122,7 +121,7 @@ func TestVar(t *testing.T) {
 }
 
 func expectGlobalVariable(name string, value *lang.Object) {
-	o, ok := new.GetGlobalVar(name)
+	o, ok := lang.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
 	}

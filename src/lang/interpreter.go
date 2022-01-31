@@ -1,12 +1,11 @@
-package new
+package lang
 
 import (
 	"fmt"
-	"mohazit/lang"
 )
 
-var globals = make(map[string]*lang.Object)
-var locals = make(map[string]*lang.Object)
+var globals = make(map[string]*Object)
+var locals = make(map[string]*Object)
 var labels = make(map[string][]Statement)
 
 // DoAll runs as many statements as possible, stopping if there's a problem
@@ -32,7 +31,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 	switch stmt.Keyword {
 	case "if", "unless":
 		if !isLocal { // don't naively wipe locals
-			locals = make(map[string]*lang.Object)
+			locals = make(map[string]*Object)
 		}
 		l := []*Token{}
 		var op *Token = nil
@@ -71,7 +70,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		if err != nil {
 			return err
 		}
-		c, ok := lang.Comps[op.Raw]
+		c, ok := Comps[op.Raw]
 		if !ok {
 			return perrf(op, "unknown comparator %s", op.Raw)
 		}
@@ -168,7 +167,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		}
 		return nil
 	default:
-		f, ok := lang.Funcs[stmt.Keyword]
+		f, ok := Funcs[stmt.Keyword]
 		if !ok {
 			return perrf(stmt.KwToken, "unknown function %s", stmt.Keyword)
 		}
@@ -182,7 +181,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 	}
 }
 
-func GetGlobalVar(name string) (v *lang.Object, ok bool) {
+func GetGlobalVar(name string) (v *Object, ok bool) {
 	v, ok = globals[name]
 	return
 }
