@@ -132,14 +132,21 @@ func parseObject(t []*Token) (*Object, error) {
 		return final, nil
 	case tIdent, tUnknown:
 		v := NewStr(t[0].Raw)
-		for i := 0; i < len(t); i++ {
-			tkn := t[i]
+		for _, tkn := range t[1:] {
 			switch tkn.Type {
 			case tIdent, tUnknown, tSpace:
 				v.StrV += tkn.Raw
 			default:
 				return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
 			}
+		}
+		br := strings.TrimSpace(strings.ToLower(v.StrV))
+		if br == "true" || br == "yes" {
+			return NewBool(true), nil
+		} else if br == "false" || br == "no" {
+			return NewBool(false), nil
+		} else if br == "nil" {
+			return NewNil(), nil
 		}
 		return v, nil
 	case tLiteral:

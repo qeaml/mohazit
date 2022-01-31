@@ -105,9 +105,9 @@ func TestIf(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectGlobalVariable("a-ok", lang.NewInt(123))
-	expectGlobalVariable("b-ok", lang.NewInt(123))
-	expectGlobalVariable("c-ok", lang.NewInt(123))
+	expectGlobalVariable("a-ok", 123)
+	expectGlobalVariable("b-ok", 123)
+	expectGlobalVariable("c-ok", 123)
 }
 
 func TestVar(t *testing.T) {
@@ -119,22 +119,38 @@ func TestVar(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectGlobalVariable("i", lang.NewInt(123))
-	expectGlobalVariable("j", lang.NewInt(321))
-	expectGlobalVariable("k", lang.NewInt(101010))
+	expectGlobalVariable("i", 123)
+	expectGlobalVariable("j", 321)
+	expectGlobalVariable("k", 101010)
 }
 
-func expectGlobalVariable(name string, value *lang.Object) {
+func expectGlobalVariable(name string, value interface{}) {
+	var obj *lang.Object
+	if value == nil {
+		obj = lang.NewNil()
+	}
+	if s, ok := value.(string); ok {
+		obj = lang.NewStr(s)
+	}
+	if i, ok := value.(int); ok {
+		obj = lang.NewInt(i)
+	}
+	if b, ok := value.(bool); ok {
+		obj = lang.NewBool(b)
+	}
+	if o, ok := value.(*lang.Object); ok {
+		obj = o
+	}
 	o, ok := lang.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
 	}
-	if !o.Equals(value) {
-		gt.Fatalf("global variables has value %s, but %s was expected",
-			o.Repr(), value.Repr())
+	if !o.Equals(obj) {
+		gt.Fatalf("global variable %s has value %s, but %s was expected",
+			name, o.Repr(), obj.Repr())
 	}
 	gt.Logf("found expected variable %s with expected value %s",
-		name, value.Repr())
+		name, obj.Repr())
 }
 
 func TestFunc(t *testing.T) {
@@ -149,7 +165,25 @@ func TestFunc(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	expectGlobalVariable("a", lang.NewInt(11))
-	expectGlobalVariable("b", lang.NewInt(100))
-	expectGlobalVariable("c", lang.NewInt(6))
+	expectGlobalVariable("a", 11)
+	expectGlobalVariable("b", 100)
+	expectGlobalVariable("c", 6)
+}
+
+func TestObject(t *testing.T) {
+	lib.Load()
+	gt = t
+	lang.Source("global n = nil\nglobal i = 123\nglobal s = hello\nglobal b = true")
+	_, err := lang.DoAll()
+	if err != nil {
+		if perr, ok := err.(*lang.ParseError); ok {
+			t.Logf("%s %s", perr.Where.String(), perr.Error())
+		}
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("n", nil)
+	expectGlobalVariable("i", 123)
+	expectGlobalVariable("s", "hello")
+	expectGlobalVariable("b", true)
 }
