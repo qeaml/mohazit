@@ -2,7 +2,7 @@ package lang
 
 var globals = make(map[string]*Object)
 var locals = make(map[string]*Object)
-var labels = make(map[string][]Statement)
+var labels = make(map[string][]*Statement)
 
 // DoAll runs as many statements as possible, stopping if there's a problem
 // reading the next statement (first value will be false) or if there's a
@@ -97,6 +97,54 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 						return err
 					}
 				}
+			}
+		}
+		return nil
+	case "label":
+		if isLocal {
+			return perr(stmt.KwToken, "labels not allowed in blocks")
+		}
+		labelName, err := parseObject(stmt.Args)
+		if err != nil {
+			return err
+		}
+		if labelName.Type != ObjStr {
+			return perr(stmt.Args[0], "label names must be strings")
+		}
+		labelStmts := []*Statement{}
+	labelLoop:
+		for {
+			substmt, err := NextStmt()
+			if err != nil {
+				return err
+			}
+			if substmt == nil {
+				break
+			}
+			switch substmt.Keyword {
+			case "end":
+				break labelLoop
+			default:
+				labelStmts = append(labelStmts, substmt)
+			}
+		}
+		labels[labelName.StrV] = labelStmts
+		return nil
+	case "goto":
+		labelName, err := parseObject(stmt.Args)
+		if err != nil {
+			return err
+		}
+		if labelName.Type != ObjStr {
+			return perr(stmt.Args[0], "label names must be strings")
+		}
+		labelStmts, ok := labels[labelName.StrV]
+		if !ok {
+			return perrf(stmt.Args[0], "unknown label %s", labelName.StrV)
+		}
+		for _, substmt := range labelStmts {
+			if err := RunStmt(substmt, true); err != nil {
+				return err
 			}
 		}
 		return nil

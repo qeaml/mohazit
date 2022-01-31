@@ -162,7 +162,7 @@ func trimSpaceTokens(t []*Token) []*Token {
 	ltrim := []*Token{}
 	ignore := true
 	for _, tkn := range t {
-		if tkn.Type != tSpace && ignore {
+		if (tkn.Type != tSpace && tkn.Type != tLinefeed) && ignore {
 			ignore = false
 		}
 		if !ignore {
@@ -172,7 +172,7 @@ func trimSpaceTokens(t []*Token) []*Token {
 	rtrim := []*Token{}
 	ignore = true
 	for i := len(ltrim) - 1; i >= 0; i-- {
-		if ltrim[i].Type != tSpace && ignore {
+		if (ltrim[i].Type != tSpace && ltrim[i].Type != tLinefeed) && ignore {
 			ignore = false
 		}
 		if !ignore {

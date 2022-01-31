@@ -187,3 +187,18 @@ func TestObject(t *testing.T) {
 	expectGlobalVariable("s", "hello")
 	expectGlobalVariable("b", true)
 }
+
+func TestLabel(t *testing.T) {
+	lib.Load()
+	gt = t
+	lang.Source("label hello-world\nglobal ok = true\nend\ngoto hello-world")
+	_, err := lang.DoAll()
+	if err != nil {
+		if perr, ok := err.(*lang.ParseError); ok {
+			t.Logf("%s %s", perr.Where.String(), perr.Error())
+		}
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("ok", true)
+}
