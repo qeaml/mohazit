@@ -5,37 +5,12 @@ import (
 	"mohazit/lang"
 )
 
-func uObjectEquals(a *lang.Object, b *lang.Object) (bool, error) {
-	if a.Type != b.Type {
-		return false, nil
-	}
-	switch a.Type {
-	case lang.ObjStr:
-		return a.StrV == b.StrV, nil
-	case lang.ObjInt:
-		return a.IntV == b.IntV, nil
-	case lang.ObjBool:
-		return a.BoolV == b.BoolV, nil
-	case lang.ObjInv:
-		return false, errors.New("invalid object")
-	}
-	return true, nil
-}
-
 func cEquals(a *lang.Object, b *lang.Object) (bool, error) {
-	eq, err := uObjectEquals(a, b)
-	if err != nil {
-		return false, err
-	}
-	if !eq {
-		return false, nil
-	}
-	return true, nil
+	return a.Equals(b), nil
 }
 
 func cNotEquals(a *lang.Object, b *lang.Object) (bool, error) {
-	eq, err := cEquals(a, b)
-	return !eq, err
+	return !a.Equals(b), err
 }
 
 func cLike(a *lang.Object, b *lang.Object) (bool, error) {
@@ -63,15 +38,8 @@ func cLike(a *lang.Object, b *lang.Object) (bool, error) {
 			return false, errors.New("could not convert type")
 		}
 	}
-	eq, err := uObjectEquals(ac, bc)
-	if err != nil {
-		return false, err
-	}
-	if !eq {
-		return false, nil
-	}
 
-	return true, nil
+	return ac.Equals(bc), nil
 }
 
 func cGreater(a *lang.Object, b *lang.Object) (bool, error) {
