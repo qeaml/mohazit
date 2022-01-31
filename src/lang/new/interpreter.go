@@ -51,7 +51,9 @@ func (i *Interpreter) Do() (ok bool, err error) {
 func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 	switch stmt.Keyword {
 	case "if", "unless":
-		i.locals = make(map[string]*lang.Object)
+		if !isLocal { // don't naively wipe locals
+			i.locals = make(map[string]*lang.Object)
+		}
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
