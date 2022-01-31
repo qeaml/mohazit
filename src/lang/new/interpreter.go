@@ -31,7 +31,9 @@ func DoAll() (ok bool, err error) {
 func RunStmt(stmt *Statement, isLocal bool) error {
 	switch stmt.Keyword {
 	case "if", "unless":
-		locals = make(map[string]*lang.Object)
+		if !isLocal { // don't naively wipe locals
+			locals = make(map[string]*lang.Object)
+		}
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
