@@ -45,113 +45,107 @@ func (t *Token) String() string {
 	return fmt.Sprintf("<%s `%s` at %d:%d>", t.Type.String(), t.Raw, t.Line, t.Col)
 }
 
-// Lexer splits the input string into individual tokens
-type Lexer struct {
-	line   uint
-	col    uint
-	source string
-	pos    int
-}
+var line uint = 1
+var col uint = 1
+var source string = ""
+var pos int = 0
 
-// NewLexer creates an empty Lexer with an empty input string
-func NewLexer() *Lexer {
-	return &Lexer{1, 1, "", 0}
-}
-
-// Source sets this Lexer's input string
-func (l *Lexer) Source(src string) {
-	l.source = src
-	l.pos = 0
+// Source sets the input string
+func Source(src string) {
+	source = src
+	pos = 0
 }
 
 // peek returns the current character WITHOUT advancing the internal pointer.
 // Returns 0 if there are no more readable characters.
-func (l *Lexer) peek() byte {
-	if l.pos >= len(l.source) {
+func peek() byte {
+	if pos >= len(source) {
 		return 0
 	}
-	return l.source[l.pos]
+	return source[pos]
 }
 
 // peekNext is the same as peek, but returns the next character over instead
-func (l *Lexer) peekNext() byte {
-	if l.pos >= len(l.source)-1 {
+func peekNext() byte {
+	if pos >= len(source)-1 {
 		return 0
 	}
-	return l.source[l.pos+1]
+	return source[pos+1]
 }
 
 // advance is the same as peek, but DOES advance the internal pointer
-func (l *Lexer) advance() byte {
-	b := l.peek()
-	l.pos++
+func advance() byte {
+	b := peek()
+	pos++
 	return b
 }
 
-// Next returns the next token in the input string, or nil if there are no
+// nextToken returns the next token in the input string, or nil if there are no
 // more tokens left
-func (l *Lexer) Next() *Token {
-	if isSpace(l.peek()) {
-		return l.tkn(tSpace, toString(l.advance()))
+func NextToken() *Token {
+	if isSpace(peek()) {
+		return makeToken(tSpace, toString(advance()))
 	}
 
-	if l.peek() == '\r' && l.peekNext() == '\n' {
-		return l.tkn(tLinefeed, toString(l.advance())+toString(l.advance()))
+	if peek() == '\r' && peekNext() == '\n' {
+		return makeToken(tLinefeed, toString(advance())+toString(advance()))
 	}
-	if l.peek() == '\n' {
-		return l.tkn(tLinefeed, toString(l.advance()))
-	}
-
-	if isBracket(l.peek()) {
-		return l.tkn(tBracket, toString(l.advance()))
+	if peek() == '\n' {
+		return makeToken(tLinefeed, toString(advance()))
 	}
 
-	if isIdentStart(l.peek()) {
-		ident := toString(l.advance())
-		for isIdentCont(l.peek()) {
-			ident += toString(l.advance())
+	if isBracket(peek()) {
+		return makeToken(tBracket, toString(advance()))
+	}
+
+	if isIdentStart(peek()) {
+		ident := toString(advance())
+		for isIdentCont(peek()) {
+			ident += toString(advance())
 		}
-		return l.tkn(tIdent, ident)
+		return makeToken(tIdent, ident)
 	}
 
-	if isDigit(l.peek()) || l.peek() == '-' {
-		literal := toString(l.advance())
-		for isDigit(l.peek()) {
-			literal += toString(l.advance())
+	if isDigit(peek()) || peek() == '-' {
+		literal := toString(advance())
+		for isDigit(peek()) {
+			literal += toString(advance())
 		}
-		return l.tkn(tLiteral, literal)
+		return makeToken(tLiteral, literal)
 	}
 
-	if l.peek() == '\\' && l.peekNext() == ' ' {
-		return l.tkn(tOper, toString(l.advance()))
+	if peek() == '\\' && peekNext() == ' ' {
+		return makeToken(tOper, toString(advance()))
 	}
 
 	dump := ""
-	for !isSpace(l.peek()) && !isDigit(l.peek()) && l.peek() != '\r' && l.peek() != '\n' && l.peek() != 0 {
-		dump += toString(l.advance())
+	for !isSpace(peek()) && !isDigit(peek()) && peek() != '\r' && peek() != '\n' && peek() != 0 {
+		dump += toString(advance())
 	}
 	for op := range lang.Comps {
 		if dump == op {
-			return l.tkn(tOper, dump)
+			return makeToken(tOper, dump)
 		}
 	}
 	if len(dump) == 0 {
 		return nil
 	}
-	return l.tkn(tUnknown, dump)
+	return makeToken(tUnknown, dump)
 }
 
-// Has returns true if there may be more tokens in the input string
-func (l *Lexer) Has() bool {
-	return l.pos != len(l.source)
+// hasNextToken returns true if there may be more tokens in the input string
+func hasNextToken() bool {
+	return pos != len(source)
 }
 
-func (l *Lexer) tkn(t TokenType, r string) *Token {
-	token := &Token{l.line, l.col, t, r}
+// makeToken creates a *Token from the input and advances the line and col
+// counters
+func makeToken(t TokenType, r string) *Token {
+	token := &Token{line, col, t, r}
 	if t == tLinefeed {
-		l.line++
-		l.col = 0
+		line++
+		col = 0
 	}
-	l.col += uint(len(r))
+	col += uint(len(r))
 	return token
 }

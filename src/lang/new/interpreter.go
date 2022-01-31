@@ -5,53 +5,33 @@ import (
 	"mohazit/lang"
 )
 
-// Interpreter reads statements from it's internal Parser and exectures them
-// also stores global/local variables and lables
-type Interpreter struct {
-	parser  *Parser
-	globals map[string]*lang.Object
-	locals  map[string]*lang.Object
-	labels  map[string][]Statement
-}
+var globals = make(map[string]*lang.Object)
+var locals = make(map[string]*lang.Object)
+var labels = make(map[string][]Statement)
 
-// NewInterpreter creates an empty Interpreter, which has no code to run
-func NewInterpreter() *Interpreter {
-	return &Interpreter{
-		parser:  NewParser(),
-		globals: make(map[string]*lang.Object),
-		locals:  make(map[string]*lang.Object),
-		labels:  make(map[string][]Statement),
-	}
-}
-
-// Source gives this Interpreter some code to run
-func (i *Interpreter) Source(src string) {
-	i.parser.Source(src)
-}
-
-// Do runs as many statements as possible, stopping if there's a problem
+// DoAll runs as many statements as possible, stopping if there's a problem
 // reading the next statement (first value will be false) or if there's a
 // problem executing said statement (first value will be true)
-func (i *Interpreter) Do() (ok bool, err error) {
+func DoAll() (ok bool, err error) {
 	for {
-		stmt, err := i.parser.Next()
+		stmt, err := NextStmt()
 		if err != nil {
 			return false, err
 		}
 		if stmt == nil {
 			return false, nil
 		}
-		if err = i.exec(stmt, false); err != nil {
+		if err = RunStmt(stmt, false); err != nil {
 			return true, err
 		}
 	}
 }
 
-// exec runs a singular statement, consuming more statements if necessary
-func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
+// RunStmt runs a singular statement, consuming more statements if necessary
+func RunStmt(stmt *Statement, isLocal bool) error {
 	switch stmt.Keyword {
 	case "if", "unless":
-		i.locals = make(map[string]*lang.Object)
+		locals = make(map[string]*lang.Object)
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
@@ -81,11 +61,11 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				}
 			}
 		}
-		lVal, err := i.parser.Tokens2object(l)
+		lVal, err := parseObject(l)
 		if err != nil {
 			return err
 		}
-		rVal, err := i.parser.Tokens2object(r)
+		rVal, err := parseObject(r)
 		if err != nil {
 			return err
 		}
@@ -101,7 +81,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 			v = !v
 		}
 		for {
-			substmt, err := i.parser.Next()
+			substmt, err := NextStmt()
 			if err != nil {
 				return err
 			}
@@ -115,7 +95,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				return nil
 			default:
 				if v {
-					err := i.exec(substmt, true)
+					err := RunStmt(substmt, true)
 					if err != nil {
 						return err
 					}
@@ -157,7 +137,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 				}
 			}
 		}
-		l = i.parser.TrimSpace(l)
+		l = trimSpaceTokens(l)
 		if len(l) > 1 {
 			return perr(l[0], "too many tokens before =")
 		}
@@ -166,7 +146,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 			fmt.Println(l)
 			return perrf(lVal, "expected identifier, got %s", lVal.Type.String())
 		}
-		rVal, err := i.parser.Tokens2object(r)
+		rVal, err := parseObject(r)
 		if err != nil {
 			return err
 		}
@@ -174,14 +154,14 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 			if !isLocal {
 				return perr(stmt.KwToken, "local variable in global context")
 			}
-			i.locals[lVal.Raw] = rVal
+			locals[lVal.Raw] = rVal
 		} else if stmt.Keyword == "global" {
-			i.globals[lVal.Raw] = rVal
+			globals[lVal.Raw] = rVal
 		} else {
 			if isLocal {
-				i.locals[lVal.Raw] = rVal
+				locals[lVal.Raw] = rVal
 			} else {
-				i.globals[lVal.Raw] = rVal
+				globals[lVal.Raw] = rVal
 			}
 		}
 		return nil
@@ -190,7 +170,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 		if !ok {
 			return perrf(stmt.KwToken, "unknown function %s", stmt.Keyword)
 		}
-		args, err := i.parser.Args(stmt.Args)
+		args, err := parseObjectList(stmt.Args)
 		if err != nil {
 			return err
 		}
@@ -200,7 +180,7 @@ func (i *Interpreter) exec(stmt *Statement, isLocal bool) error {
 	}
 }
 
-func (i *Interpreter) GetGlobal(name string) (v *lang.Object, ok bool) {
-	v, ok = i.globals[name]
+func GetGlobalVar(name string) (v *lang.Object, ok bool) {
+	v, ok = globals[name]
 	return
 }

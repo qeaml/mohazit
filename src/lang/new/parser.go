@@ -12,27 +12,12 @@ type Statement struct {
 	Args    []*Token
 }
 
-// Parser reads it's Lexer's tokens and turns them into individual statements
-type Parser struct {
-	lexer *Lexer
-}
-
-// NewParser creates an empty Parser with an empty input string
-func NewParser() *Parser {
-	return &Parser{NewLexer()}
-}
-
-// Source sets this Parser's input string
-func (p *Parser) Source(src string) {
-	p.lexer.Source(src)
-}
-
 // toknes reads and returns the tokens of the next statement
-func (p *Parser) tokens() []*Token {
+func nextStmtTokens() []*Token {
 	out := []*Token{}
 	var t *Token
-	for p.lexer.Has() {
-		t = p.lexer.Next()
+	for hasNextToken() {
+		t = NextToken()
 		if t == nil {
 			continue
 		}
@@ -41,12 +26,12 @@ func (p *Parser) tokens() []*Token {
 			return out
 		}
 	}
-	return p.TrimSpace(out)
+	return trimSpaceTokens(out)
 }
 
 // Next reads and returns the next statement in the input string
-func (p *Parser) Next() (*Statement, error) {
-	raw := p.tokens()
+func NextStmt() (*Statement, error) {
+	raw := nextStmtTokens()
 	if len(raw) < 1 {
 		return nil, nil
 	}
@@ -63,7 +48,7 @@ func (p *Parser) Next() (*Statement, error) {
 }
 
 // Args reads a slice of objects from the given token slice
-func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
+func parseObjectList(tkns []*Token) ([]*lang.Object, error) {
 	out := []*lang.Object{}
 	ctx := ""
 	for _, tkn := range tkns {
@@ -95,8 +80,8 @@ func (p *Parser) Args(tkns []*Token) ([]*lang.Object, error) {
 }
 
 // Tokens2object reads a single object from the given token slice
-func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
-	t = p.TrimSpace(t)
+func parseObject(t []*Token) (*lang.Object, error) {
+	t = trimSpaceTokens(t)
 	switch t[0].Type {
 	case tIdent, tUnknown:
 		v := lang.NewStr(t[0].Raw)
@@ -119,7 +104,7 @@ func (p *Parser) Tokens2object(t []*Token) (*lang.Object, error) {
 }
 
 // TrimSpace removes tSpace tokens from both ends of the given token slice
-func (p *Parser) TrimSpace(t []*Token) []*Token {
+func trimSpaceTokens(t []*Token) []*Token {
 	ltrim := []*Token{}
 	ignore := true
 	for _, tkn := range t {

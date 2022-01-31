@@ -33,10 +33,9 @@ func main() {
 			fmt.Println(err.Error())
 			os.Exit(eRead)
 		}
-		i := new.NewInterpreter()
-		i.Source(string(s))
+		new.Source(string(s))
 		for {
-			cont, err := i.Do()
+			cont, err := new.DoAll()
 			if !cont {
 				break
 			}

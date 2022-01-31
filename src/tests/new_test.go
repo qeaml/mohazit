@@ -9,15 +9,11 @@ import (
 )
 
 var gt *testing.T
-var gl *new.Lexer
-var gp *new.Parser
-var gi *new.Interpreter
 
 func TestLexer(t *testing.T) {
 	lib.Load()
 	gt = t
-	gl = new.NewLexer()
-	gl.Source("var test = 123")
+	new.Source("var test = 123")
 	expectToken(3, "var")  // ident
 	expectToken(0, " ")    // space
 	expectToken(3, "test") // ident
@@ -29,7 +25,7 @@ func TestLexer(t *testing.T) {
 }
 
 func expectToken(tt new.TokenType, tr string) {
-	tkn := gl.Next()
+	tkn := new.NextToken()
 	if tkn == nil {
 		return
 	}
@@ -47,13 +43,12 @@ func expectToken(tt new.TokenType, tr string) {
 func TestParser(t *testing.T) {
 	lib.Load()
 	gt = t
-	gp = new.NewParser()
-	gp.Source("var test = 123")
+	new.Source("var test = 123")
 	expectStatement("var", 0, 3, 0, 4, 0, 2)
 }
 
 func expectStatement(kw string, args ...new.TokenType) {
-	stmt, err := gp.Next()
+	stmt, err := new.NextStmt()
 	if err != nil {
 		gt.Fatal(err.Error())
 	}
@@ -79,10 +74,9 @@ func expectStatement(kw string, args ...new.TokenType) {
 func TestInterpreter(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter()
-	gi.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
+	new.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
 	for {
-		cont, err := gi.Do()
+		cont, err := new.DoAll()
 		if !cont {
 			break
 		}
@@ -96,9 +90,8 @@ func TestInterpreter(t *testing.T) {
 func TestCall(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter()
-	gi.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
-	_, err := gi.Do()
+	new.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
+	_, err := new.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -107,9 +100,8 @@ func TestCall(t *testing.T) {
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter()
-	gi.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
-	_, err := gi.Do()
+	new.Source("unless 1 = 3\nsay aa\nsay bb\nelse\nsay dd\nend")
+	_, err := new.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -118,9 +110,8 @@ func TestIf(t *testing.T) {
 func TestVar(t *testing.T) {
 	lib.Load()
 	gt = t
-	gi = new.NewInterpreter()
-	gi.Source("global i = 123\nvar j = 321\nset k=101010")
-	_, err := gi.Do()
+	new.Source("global i = 123\nvar j = 321\nset k=101010")
+	_, err := new.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -131,7 +122,7 @@ func TestVar(t *testing.T) {
 }
 
 func expectGlobalVariable(name string, value *lang.Object) {
-	o, ok := gi.GetGlobal(name)
+	o, ok := new.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
 	}
