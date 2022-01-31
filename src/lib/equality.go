@@ -10,7 +10,7 @@ func cEquals(a *lang.Object, b *lang.Object) (bool, error) {
 }
 
 func cNotEquals(a *lang.Object, b *lang.Object) (bool, error) {
-	return !a.Equals(b), err
+	return !a.Equals(b), nil
 }
 
 func cLike(a *lang.Object, b *lang.Object) (bool, error) {
