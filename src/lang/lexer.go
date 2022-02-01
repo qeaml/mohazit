@@ -115,8 +115,21 @@ func NextToken() *Token {
 		return makeToken(tLiteral, literal)
 	}
 
-	if peek() == '\\' && peekNext() == ' ' {
-		return makeToken(tOper, toString(advance()))
+	if peek() == '\\' {
+		_ = advance()
+		e := advance()
+		switch e {
+		case ' ':
+			return makeTokenAlt(tOper, "\\", 2)
+		case 'n':
+			return makeTokenAlt(tUnknown, "\n", 2)
+		case 'r':
+			return makeTokenAlt(tUnknown, "\r", 2)
+		case 't':
+			return makeTokenAlt(tUnknown, "\t", 2)
+		default:
+			return makeToken(tUnknown, "\\"+toString(e))
+		}
 	}
 
 	dump := ""
@@ -148,5 +161,15 @@ func makeToken(t TokenType, r string) *Token {
 		col = 0
 	}
 	col += uint(len(r))
+	return token
+}
+
+func makeTokenAlt(t TokenType, r string, len uint) *Token {
+	token := &Token{line, col, t, r}
+	if t == tLinefeed {
+		line++
+		col = 0
+	}
+	col += len
 	return token
 }

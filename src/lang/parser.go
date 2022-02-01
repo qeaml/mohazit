@@ -64,7 +64,6 @@ outer:
 					i++
 					tkn = tkns[i]
 					if tkn.Type == tOper && tkn.Raw == "\\" {
-						i++
 						raw = append(raw, this)
 						continue outer
 					}
