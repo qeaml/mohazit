@@ -21,17 +21,17 @@ func main() {
 	lib.Load()
 	if len(os.Args) < 2 {
 		fmt.Println("need input file")
-		os.Exit(eArgs)
+		exit(eArgs)
 	} else {
 		f, err := os.Open(os.Args[1])
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(eFile)
+			exit(eFile)
 		}
 		s, err := io.ReadAll(f)
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(eRead)
+			exit(eRead)
 		}
 		lang.Source(string(s))
 		for {
@@ -46,14 +46,22 @@ func main() {
 				} else {
 					fmt.Println(err.Error())
 				}
-				os.Exit(eScript)
+				exit(eScript)
 			}
 		}
 	}
+	exit(0)
+}
+
+func exit(code int) {
 	if err := lib.Cleanup(); err != nil {
 		fmt.Println("-- CLEANUP ERROR --")
 		fmt.Println("(this usually isn't a serious problem, but should be avoided!")
 		fmt.Println(err.Error())
-		os.Exit(eCleanup)
+		if code == 0 {
+			os.Exit(eCleanup)
+		} else {
+			os.Exit(code)
+		}
 	}
 }
