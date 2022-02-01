@@ -94,7 +94,17 @@ func parseObject(t []*Token) (*Object, error) {
 	switch t[0].Type {
 	case tBracket:
 		if t[0].Raw != "[" {
-			return NewNil(), perrf(t[0], "expected [, got %s", t[0].Raw)
+			// return NewNil(), perrf(t[0], "expected [, got %s", t[0].Raw)
+			v := NewStr(t[0].Raw)
+			for _, tkn := range t[1:] {
+				switch tkn.Type {
+				case tIdent, tUnknown, tSpace, tLiteral, tBracket:
+					v.StrV += tkn.Raw
+				default:
+					return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
+				}
+			}
+			return v, nil
 		}
 		funcnames := []*Token{}
 		argstart := 0
@@ -142,7 +152,7 @@ func parseObject(t []*Token) (*Object, error) {
 		v := NewStr(t[0].Raw)
 		for _, tkn := range t[1:] {
 			switch tkn.Type {
-			case tIdent, tUnknown, tSpace, tLiteral:
+			case tIdent, tUnknown, tSpace, tLiteral, tBracket:
 				v.StrV += tkn.Raw
 			default:
 				return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
