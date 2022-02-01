@@ -58,18 +58,27 @@ func (o *Object) Repr() string {
 }
 
 func (o *Object) String() string {
-	return o.Repr()
-	// switch o.Type {
-	// case ObjNil:
-	// 	return "nil"
-	// case ObjStr:
-	// 	return o.StrV
-	// case ObjInt:
-	// 	return fmt.Sprint(o.IntV)
-	// case ObjBool:
-	// 	return fmt.Sprint(o.BoolV)
-	// }
-	// return "?"
+	switch o.Type {
+	case ObjNil:
+		return "nil"
+	case ObjStr:
+		return o.StrV
+	case ObjInt:
+		return fmt.Sprint(o.IntV)
+	case ObjBool:
+		return fmt.Sprint(o.BoolV)
+	}
+	return "?"
+}
+
+func (o *Object) Clone() *Object {
+	return &Object{
+		Type:  o.Type,
+		StrV:  o.StrV,
+		IntV:  o.IntV,
+		BoolV: o.BoolV,
+		RefV:  o.RefV,
+	}
 }
 
 func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
@@ -160,6 +169,21 @@ func NewBool(val bool) *Object {
 		Type:  ObjBool,
 		BoolV: val,
 	}
+}
+
+func NewObject(val interface{}) *Object {
+	if val == nil {
+		return NewNil()
+	} else if v, ok := val.(*lang.Object); ok {
+		return v.Clone()
+	} else if v, ok := val.(string); ok {
+		return NewStr(v)
+	} else if v, ok := val.(int); ok {
+		return NewInt(v)
+	} else if v, ok := val.(bool); ok {
+		return NewBool(v)
+	}
+	return &Object{Type: ObjInv}
 }
 
 func (a *Object) Equals(b *Object) bool {
