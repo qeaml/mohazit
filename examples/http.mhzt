@@ -1,0 +1,9 @@
+sock-listen localhost:8989 \ sock1
+sock-accept sock1
+var req = [data-read] 4096
+data-write HTTP/1.1 200 OK\r\n
+data-write Server: Mohazit/15\r\n
+data-write Content-Type: text/html \r\n
+data-write Connection: Closed\r\n\r\n
+data-write <h1>HELLO FROM MOHAZIT!</h1>\r\n
+data-close

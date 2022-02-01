@@ -206,7 +206,7 @@ func (s *BufferStream) Read(p []byte) (int, error) {
 
 func (s *BufferStream) Write(p []byte) (int, error) {
 	n, err := s.data.Write(p)
-	s.read.Seek(int64(n), 0)
+	s.read.Seek(int64(n), 1)
 	return n, err
 }
 

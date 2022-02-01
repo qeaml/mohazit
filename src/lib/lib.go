@@ -44,6 +44,10 @@ func Load() {
 		// http
 		"http-get": fHttpGet,
 		"http-ok":  fHttpOk,
+		// socket
+		"sock-dial":   fSockDial,
+		"sock-listen": fSockListen,
+		"sock-accept": fSockAccept,
 	}
 	lang.Comps = lang.VCompMap{
 		"=":  cEquals,

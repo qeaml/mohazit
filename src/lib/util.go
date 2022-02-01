@@ -45,4 +45,5 @@ var (
 	moreArgs = LazyError("function: not enough arguments: %s", "fnc_moreargs")
 	badType  = LazyError("function: wrong type: %s", "fnc_badtype")
 	badState = LazyError("function: unexpected: %s", "fnc_badstate")
+	badArg   = LazyError("function: bad argument: %s", "fnc_badarg")
 )
