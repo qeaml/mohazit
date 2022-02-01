@@ -174,7 +174,7 @@ func NewBool(val bool) *Object {
 func NewObject(val interface{}) *Object {
 	if val == nil {
 		return NewNil()
-	} else if v, ok := val.(*lang.Object); ok {
+	} else if v, ok := val.(*Object); ok {
 		return v.Clone()
 	} else if v, ok := val.(string); ok {
 		return NewStr(v)

@@ -49,33 +49,42 @@ func NextStmt() (*Statement, error) {
 // Args reads a slice of objects from the given token slice
 func parseObjectList(tkns []*Token) ([]*Object, error) {
 	out := []*Object{}
-	ctx := ""
-	for _, tkn := range tkns {
+	raw := [][]*Token{}
+outer:
+	for i := 0; i < len(tkns); i++ {
+		tkn := tkns[i]
+		this := []*Token{}
 		switch tkn.Type {
-		case tOper:
-			if tkn.Raw == "\\" {
-				out = append(out, NewStr(strings.TrimSpace(ctx)))
-				ctx = ""
-			} else {
-				ctx += tkn.Raw
+		case tSpace, tLinefeed:
+			// ignore
+		case tIdent, tUnknown, tBracket:
+			for {
+				this = append(this, tkn)
+				if i+1 < len(tkns) {
+					i++
+					tkn = tkns[i]
+					if tkn.Type == tOper && tkn.Raw == "\\" {
+						i++
+						raw = append(raw, this)
+						continue outer
+					}
+				} else {
+					raw = append(raw, this)
+					break outer
+				}
 			}
 		case tLiteral:
-			if len(ctx) > 0 {
-				out = append(out, NewStr(strings.TrimSpace(ctx)))
-			}
-			ctx = ""
-			v, err := strconv.Atoi(tkn.Raw)
-			if err != nil {
-				return nil, err
-			}
-			out = append(out, NewInt(v))
-		default:
-			ctx += tkn.Raw
+			raw = append(raw, []*Token{tkn})
+		case tOper:
+			return nil, perrf(tkn, "unexpected token: %s", tkn.Type)
 		}
 	}
-	if ctx != "" {
-		out = append(out, NewStr(strings.TrimSpace(ctx)))
-		ctx = ""
+	for _, src := range raw {
+		o, err := parseObject(src)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, o)
 	}
 	return out, nil
 }
@@ -134,7 +143,7 @@ func parseObject(t []*Token) (*Object, error) {
 		v := NewStr(t[0].Raw)
 		for _, tkn := range t[1:] {
 			switch tkn.Type {
-			case tIdent, tUnknown, tSpace:
+			case tIdent, tUnknown, tSpace, tLiteral:
 				v.StrV += tkn.Raw
 			default:
 				return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
