@@ -21,6 +21,12 @@ func TestLexer(t *testing.T) {
 	expectToken(0, " ")    // space
 	expectToken(2, "123")  // literal
 	expectToken(1, "\n")
+	lang.Source("say {deez} nuts")
+	expectToken(3, "say")
+	expectToken(0, " ")
+	expectToken(6, "deez")
+	expectToken(0, " ")
+	expectToken(3, "nuts")
 }
 
 func expectToken(tt lang.TokenType, tr string) {

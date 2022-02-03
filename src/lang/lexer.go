@@ -13,6 +13,7 @@ const (
 	tIdent
 	tOper
 	tBracket
+	tRef
 	tUnknown
 )
 
@@ -30,6 +31,8 @@ func (t TokenType) String() string {
 		return "operator"
 	case tBracket:
 		return "bracket"
+	case tRef:
+		return "ref"
 	default:
 		return "unknown"
 	}
@@ -96,6 +99,18 @@ func NextToken() *Token {
 	}
 
 	if isBracket(peek()) {
+		if peek() == '{' {
+			_ = advance()
+			dump := ""
+			for {
+				if peek() == '}' {
+					_ = advance()
+					break
+				}
+				dump += toString(advance())
+			}
+			return makeToken(tRef, dump)
+		}
 		return makeToken(tBracket, toString(advance()))
 	}
 
