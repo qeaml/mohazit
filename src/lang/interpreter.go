@@ -43,7 +43,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				case tLinefeed:
 					break ifLoop
 				default:
-					return perrf(tkn, "unexpected %s", tkn.Type.String())
+					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 				}
 			} else {
 				switch tkn.Type {
@@ -54,7 +54,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				case tLinefeed:
 					break ifLoop
 				default:
-					return perrf(tkn, "unexpected %s", tkn.Type.String())
+					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 				}
 			}
 		}
@@ -169,16 +169,16 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				case tLinefeed:
 					break varLoop
 				default:
-					return perrf(tkn, "unexpected %s", tkn.Type.String())
+					return perrf(tkn, "unexpected %s in variable name", tkn.Type.String())
 				}
 			} else {
 				switch tkn.Type {
-				case tIdent, tLiteral, tSpace, tBracket:
+				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					r = append(r, tkn)
 				case tLinefeed:
 					break varLoop
 				default:
-					return perrf(tkn, "unexpected %s", tkn.Type.String())
+					return perrf(tkn, "unexpected %s in variable value", tkn.Type.String())
 				}
 			}
 		}
@@ -226,5 +226,10 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 
 func GetGlobalVar(name string) (v *Object, ok bool) {
 	v, ok = globals[name]
+	return
+}
+
+func GetLocalVar(name string) (v *Object, ok bool) {
+	v, ok = locals[name]
 	return
 }

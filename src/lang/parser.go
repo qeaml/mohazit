@@ -92,6 +92,19 @@ outer:
 func parseObject(t []*Token) (*Object, error) {
 	t = trimSpaceTokens(t)
 	switch t[0].Type {
+	case tRef:
+		if len(t) > 1 {
+			return nil, perrf(t[1], "unexpected %s in reference", t[1].Type)
+		}
+		lv, ok := GetLocalVar(t[0].Raw)
+		if ok {
+			return lv, nil
+		}
+		gv, ok := GetGlobalVar(t[0].Raw)
+		if ok {
+			return gv, nil
+		}
+		return nil, perrf(t[0], "could not find variable %s", t[0].Raw)
 	case tBracket:
 		if t[0].Raw != "[" {
 			// return NewNil(), perrf(t[0], "expected [, got %s", t[0].Raw)
@@ -171,7 +184,7 @@ func parseObject(t []*Token) (*Object, error) {
 		v, err := strconv.Atoi(t[0].Raw)
 		return NewInt(v), err
 	default:
-		return NewNil(), perrf(t[0], "unexpected %s", t[0])
+		return NewNil(), perrf(t[0], "unexpected %s in object value", t[0])
 	}
 }
 

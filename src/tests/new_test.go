@@ -119,6 +119,7 @@ func TestIf(t *testing.T) {
 func TestVar(t *testing.T) {
 	lib.Load()
 	gt = t
+
 	lang.Source("global i = 123\nvar j = 321\nset k=101010")
 	_, err := lang.DoAll()
 	if err != nil {
@@ -128,6 +129,14 @@ func TestVar(t *testing.T) {
 	expectGlobalVariable("i", 123)
 	expectGlobalVariable("j", 321)
 	expectGlobalVariable("k", 101010)
+
+	lang.Source("set l = {i}")
+	_, err = lang.DoAll()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("l", 123)
 }
 
 func expectGlobalVariable(name string, value interface{}) {
@@ -147,9 +156,15 @@ func expectGlobalVariable(name string, value interface{}) {
 	if o, ok := value.(*lang.Object); ok {
 		obj = o
 	}
+	if obj == nil {
+		gt.Fatal("cannot expect invalid value")
+	}
 	o, ok := lang.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
+	}
+	if o == nil {
+		gt.Fatal("variable is stored as nil")
 	}
 	if !o.Equals(obj) {
 		gt.Fatalf("global variable %s has value %s, but %s was expected",
