@@ -13,7 +13,6 @@ const (
 	ObjInt
 	ObjBool
 	ObjRef
-	ObjInv
 )
 
 func (t ObjectType) String() string {
@@ -28,9 +27,8 @@ func (t ObjectType) String() string {
 		return "Bool"
 	case ObjRef:
 		return "Ref"
-	default:
-		return fmt.Sprint(uint8(t))
 	}
+	panic("invalid object type: " + string(uint8(t)))
 }
 
 type Object struct {
@@ -54,7 +52,7 @@ func (o *Object) Repr() string {
 	case ObjRef:
 		return "[Ref {" + o.StrV + "}]"
 	}
-	return "?"
+	panic("object of invalid type: " + string(uint8(o.Type)))
 }
 
 func (o *Object) String() string {
@@ -68,7 +66,7 @@ func (o *Object) String() string {
 	case ObjBool:
 		return fmt.Sprint(o.BoolV)
 	}
-	return "?"
+	panic("object of invalid type: " + string(o.Type))
 }
 
 func (o *Object) Clone() *Object {
@@ -92,7 +90,7 @@ func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
 	case ObjNil:
 		return &Object{Type: ObjNil}, true
 	}
-	return nil, false
+	panic("object of invalid type: " + string(o.Type))
 }
 
 func (o *Object) convertString() (*Object, bool) {
@@ -183,7 +181,7 @@ func NewObject(val interface{}) *Object {
 	} else if v, ok := val.(bool); ok {
 		return NewBool(v)
 	}
-	return &Object{Type: ObjInv}
+	panic("unsupported value: " + fmt.Sprint(val))
 }
 
 func (a *Object) Equals(b *Object) bool {
@@ -202,7 +200,6 @@ func (a *Object) Equals(b *Object) bool {
 	case ObjRef:
 		// two refs to the same variable will have the same effective value
 		return a.RefV == b.RefV
-	default:
-		return false // invalid objects can never be equal
 	}
+	panic("object of invalid type: " + string(a.Type))
 }
