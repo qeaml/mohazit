@@ -148,7 +148,7 @@ func NextToken() *Token {
 	}
 
 	dump := ""
-	for !isSpace(peek()) && !isDigit(peek()) && !isBracket(peek()) && peek() != '\r' && peek() != '\n' && peek() != 0 {
+	for !isValid(peek()) {
 		dump += toString(advance())
 	}
 	for op := range Comps {

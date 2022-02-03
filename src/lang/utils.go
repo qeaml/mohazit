@@ -41,6 +41,14 @@ func isCloseBracket(c byte) bool {
 	return c == ')' || c == ']' || c == '}' || c == '>'
 }
 
+func isValid(c byte) bool {
+	return (isSpace(c) ||
+		isDigit(c) ||
+		isBracket(c) ||
+		c == '\r' || c == '\n' ||
+		c == 0)
+}
+
 // toString turn the given byte into a 1-long string
 func toString(c byte) string {
 	return string(rune(c))
