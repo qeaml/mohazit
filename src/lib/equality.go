@@ -49,7 +49,7 @@ func cGreater(a *lang.Object, b *lang.Object) (bool, error) {
 	if a.Type != lang.ObjInt {
 		return false, badType.Get("arguments are not integers, cannot compare")
 	}
-	return a.IntV > b.IntV, nil
+	return a.Data.Int() > b.Data.Int(), nil
 }
 
 func cLesser(a *lang.Object, b *lang.Object) (bool, error) {
@@ -59,5 +59,5 @@ func cLesser(a *lang.Object, b *lang.Object) (bool, error) {
 	if a.Type != lang.ObjInt {
 		return false, badType.Get("arguments are not integers, cannot compare")
 	}
-	return a.IntV < b.IntV, nil
+	return a.Data.Int() < b.Data.Int(), nil
 }

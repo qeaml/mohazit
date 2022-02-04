@@ -10,10 +10,7 @@ import (
 var random = rand.New(rand.NewSource(time.Now().Unix()))
 
 func fRandom(args []*lang.Object) (*lang.Object, error) {
-	return &lang.Object{
-		Type: lang.ObjInt,
-		IntV: random.Int(),
-	}, nil
+	return lang.NewInt(random.Int()), nil
 }
 
 func fLimitedRandom(args []*lang.Object) (*lang.Object, error) {
@@ -24,10 +21,7 @@ func fLimitedRandom(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjInt {
 		return nil, badType.Get("bound must be an integer")
 	}
-	return &lang.Object{
-		Type: lang.ObjInt,
-		IntV: random.Intn(in.IntV),
-	}, nil
+	return lang.NewInt(random.Intn(int(in.Data.Int()))), nil
 }
 
 func fAtoi(args []*lang.Object) (*lang.Object, error) {
@@ -38,7 +32,7 @@ func fAtoi(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjStr {
 		return nil, badType.Get("input must be a string")
 	}
-	n, err := strconv.Atoi(in.StrV)
+	n, err := strconv.Atoi(in.Data.String())
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +55,7 @@ func fInc(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjInt {
 		return nil, badType.Get("input must be an integer")
 	}
-	return lang.NewInt(in.IntV + 1), nil
+	return lang.NewInt(int(in.Data.Int()) + 1), nil
 }
 
 func fDec(args []*lang.Object) (*lang.Object, error) {
@@ -72,7 +66,7 @@ func fDec(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjInt {
 		return nil, badType.Get("input must be an integer")
 	}
-	return lang.NewInt(in.IntV - 1), nil
+	return lang.NewInt(int(in.Data.Int()) - 1), nil
 }
 
 func fNeg(args []*lang.Object) (*lang.Object, error) {
@@ -83,5 +77,5 @@ func fNeg(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjInt {
 		return nil, badType.Get("input must be an integer")
 	}
-	return lang.NewInt(-in.IntV), nil
+	return lang.NewInt(-int(in.Data.Int())), nil
 }

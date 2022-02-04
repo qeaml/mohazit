@@ -20,13 +20,13 @@ func fRun(args []*lang.Object) (*lang.Object, error) {
 	if cmdObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("command must be a string")
 	}
-	cmd = cmdObj.StrV + " "
+	cmd = cmdObj.Data.String() + " "
 	// if len(args) >= 2 {
 	// 	annotObj := args[1]
 	// 	if annotObj.Type != lang.ObjStr {
 	// 		return lang.NewNil(), badType.Get("annotations must be a string")
 	// 	}
-	// 	annotations = strings.Split(annotObj.StrV, " ")
+	// 	annotations = strings.Split(annotObj.Data.String(), " ")
 	// }
 
 	fmt.Printf("command: %s\n", cmd)

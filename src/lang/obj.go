@@ -2,6 +2,7 @@ package lang
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -32,27 +33,16 @@ func (t ObjectType) String() string {
 }
 
 type Object struct {
-	Type  ObjectType
-	StrV  string
-	IntV  int
-	BoolV bool
-	RefV  string
+	Type ObjectType
+	// StrV  string
+	// IntV  int
+	// BoolV bool
+	// RefV  string
+	Data reflect.Value
 }
 
 func (o *Object) Repr() string {
-	switch o.Type {
-	case ObjNil:
-		return "[Nil]"
-	case ObjStr:
-		return "[Str `" + o.StrV + "`]"
-	case ObjInt:
-		return fmt.Sprintf("[Int %d]", o.IntV)
-	case ObjBool:
-		return fmt.Sprintf("[Bool %t]", o.BoolV)
-	case ObjRef:
-		return "[Ref {" + o.StrV + "}]"
-	}
-	panic("object of invalid type: " + string(uint8(o.Type)))
+	return fmt.Sprintf("<%s %s>", o.Type, o)
 }
 
 func (o *Object) String() string {
@@ -60,22 +50,19 @@ func (o *Object) String() string {
 	case ObjNil:
 		return "nil"
 	case ObjStr:
-		return o.StrV
+		return o.Data.String()
 	case ObjInt:
-		return fmt.Sprint(o.IntV)
+		return fmt.Sprint(o.Data.Int())
 	case ObjBool:
-		return fmt.Sprint(o.BoolV)
+		return fmt.Sprint(o.Data.Bool())
 	}
 	panic("object of invalid type: " + string(o.Type))
 }
 
 func (o *Object) Clone() *Object {
 	return &Object{
-		Type:  o.Type,
-		StrV:  o.StrV,
-		IntV:  o.IntV,
-		BoolV: o.BoolV,
-		RefV:  o.RefV,
+		Type: o.Type,
+		Data: o.Data,
 	}
 }
 
@@ -96,7 +83,7 @@ func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
 func (o *Object) convertString() (*Object, bool) {
 	return &Object{
 		Type: ObjStr,
-		StrV: o.String(),
+		Data: reflect.ValueOf(o.String()),
 	}, true
 }
 
@@ -104,17 +91,17 @@ func (o *Object) convertBool() (*Object, bool) {
 	v := false
 	switch o.Type {
 	case ObjStr:
-		v = len(o.StrV) > 0
+		v = len(o.Data.String()) > 0
 	case ObjInt:
-		v = o.IntV > 0
+		v = o.Data.Int() > 0
 	case ObjNil:
 		v = false
 	default:
 		return nil, false
 	}
 	return &Object{
-		Type:  ObjBool,
-		BoolV: v,
+		Type: ObjBool,
+		Data: reflect.ValueOf(v),
 	}, true
 }
 
@@ -122,13 +109,13 @@ func (o *Object) convertInt() (*Object, bool) {
 	v := 0
 	switch o.Type {
 	case ObjStr:
-		parsed, err := strconv.Atoi(o.StrV)
+		parsed, err := strconv.Atoi(o.Data.String())
 		if err != nil {
 			return nil, false
 		}
 		v = parsed
 	case ObjBool:
-		if o.BoolV {
+		if o.Data.Bool() {
 			v = 1
 		}
 	case ObjNil:
@@ -138,21 +125,21 @@ func (o *Object) convertInt() (*Object, bool) {
 	}
 	return &Object{
 		Type: ObjInt,
-		IntV: v,
+		Data: reflect.ValueOf(v),
 	}, true
 }
 
 func NewStr(txt string) *Object {
 	return &Object{
 		Type: ObjStr,
-		StrV: txt,
+		Data: reflect.ValueOf(txt),
 	}
 }
 
 func NewInt(val int) *Object {
 	return &Object{
 		Type: ObjInt,
-		IntV: val,
+		Data: reflect.ValueOf(val),
 	}
 }
 
@@ -164,8 +151,8 @@ func NewNil() *Object {
 
 func NewBool(val bool) *Object {
 	return &Object{
-		Type:  ObjBool,
-		BoolV: val,
+		Type: ObjBool,
+		Data: reflect.ValueOf(val),
 	}
 }
 
@@ -192,14 +179,11 @@ func (a *Object) Equals(b *Object) bool {
 	case ObjNil:
 		return true // nils are always equal
 	case ObjInt:
-		return a.IntV == b.IntV
+		return a.Data.Int() == b.Data.Int()
 	case ObjBool:
-		return a.BoolV == b.BoolV
-	case ObjStr:
-		return a.StrV == b.StrV
-	case ObjRef:
-		// two refs to the same variable will have the same effective value
-		return a.RefV == b.RefV
+		return a.Data.Bool() == b.Data.Bool()
+	case ObjStr, ObjRef:
+		return a.Data.String() == b.Data.String()
 	}
 	panic("object of invalid type: " + string(a.Type))
 }

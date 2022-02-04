@@ -29,7 +29,7 @@ func fDataRead(args []*lang.Object) (*lang.Object, error) {
 	if arg.Type != lang.ObjInt {
 		return nil, badType.Get("amount must be an integer")
 	}
-	amt = arg.IntV
+	amt = int(arg.Data.Int())
 	streamName = lastStream
 	stream, ok := streams[streamName]
 	if !ok {
@@ -58,7 +58,7 @@ func fDataWrite(args []*lang.Object) (*lang.Object, error) {
 		if streamObj.Type != lang.ObjStr {
 			return lang.NewNil(), badType.Get("stream name must be a string")
 		}
-		streamName = streamObj.StrV
+		streamName = streamObj.Data.String()
 	} else {
 		if lastStream == "" {
 			return lang.NewNil(), badState.Get("could not infer stream name")
@@ -87,13 +87,13 @@ func fDataSeek(args []*lang.Object) (*lang.Object, error) {
 	if posObj.Type != lang.ObjInt {
 		return lang.NewNil(), badType.Get("position must be an integer")
 	}
-	pos = posObj.IntV
+	pos = int(posObj.Data.Int())
 	if len(args) >= 2 {
 		var streamObj = args[1]
 		if streamObj.Type != lang.ObjStr {
 			return lang.NewNil(), badType.Get("stream name must be a string")
 		}
-		streamName = streamObj.StrV
+		streamName = streamObj.Data.String()
 	} else {
 		if lastStream == "" {
 			return lang.NewNil(), badState.Get("could not infer stream name")
@@ -119,7 +119,7 @@ func fDataClose(args []*lang.Object) (*lang.Object, error) {
 		if streamObj.Type != lang.ObjStr {
 			return lang.NewNil(), badType.Get("stream name must be a string")
 		}
-		streamName = streamObj.StrV
+		streamName = streamObj.Data.String()
 	} else {
 		if lastStream == "" {
 			return lang.NewNil(), badState.Get("could not infer stream name")
@@ -149,7 +149,7 @@ func fFileOpen(args []*lang.Object) (*lang.Object, error) {
 	if fileObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	fileName = fileObj.StrV
+	fileName = fileObj.Data.String()
 	streamName = fmt.Sprintf("filestream%d", streamsSoFar)
 	streamsSoFar++
 

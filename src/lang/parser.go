@@ -108,16 +108,16 @@ func parseObject(t []*Token) (*Object, error) {
 	case tBracket:
 		if t[0].Raw != "[" {
 			// return NewNil(), perrf(t[0], "expected [, got %s", t[0].Raw)
-			v := NewStr(t[0].Raw)
+			v := "" + t[0].Raw
 			for _, tkn := range t[1:] {
 				switch tkn.Type {
 				case tIdent, tUnknown, tSpace, tLiteral, tBracket:
-					v.StrV += tkn.Raw
+					v += tkn.Raw
 				default:
 					return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
 				}
 			}
-			return v, nil
+			return NewStr(v), nil
 		}
 		funcnames := []*Token{}
 		argstart := 0
@@ -162,16 +162,16 @@ func parseObject(t []*Token) (*Object, error) {
 		}
 		return final, nil
 	case tIdent, tUnknown:
-		v := NewStr(t[0].Raw)
+		v := "" + t[0].Raw
 		for _, tkn := range t[1:] {
 			switch tkn.Type {
 			case tIdent, tUnknown, tSpace, tLiteral, tBracket:
-				v.StrV += tkn.Raw
+				v += tkn.Raw
 			default:
 				return NewNil(), perrf(tkn, "unexpected %s in string literal", tkn.Type.String())
 			}
 		}
-		br := strings.TrimSpace(strings.ToLower(v.StrV))
+		br := strings.TrimSpace(strings.ToLower(v))
 		if br == "true" || br == "yes" {
 			return NewBool(true), nil
 		} else if br == "false" || br == "no" {
@@ -179,7 +179,7 @@ func parseObject(t []*Token) (*Object, error) {
 		} else if br == "nil" {
 			return NewNil(), nil
 		}
-		return v, nil
+		return NewStr(v), nil
 	case tLiteral:
 		v, err := strconv.Atoi(t[0].Raw)
 		return NewInt(v), err

@@ -128,7 +128,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				labelStmts = append(labelStmts, substmt)
 			}
 		}
-		labels[labelName.StrV] = labelStmts
+		labels[labelName.Data.String()] = labelStmts
 		return nil
 	case "goto":
 		labelName, err := parseObject(stmt.Args)
@@ -138,9 +138,9 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		if labelName.Type != ObjStr {
 			return perr(stmt.Args[0], "label names must be strings")
 		}
-		labelStmts, ok := labels[labelName.StrV]
+		labelStmts, ok := labels[labelName.Data.String()]
 		if !ok {
-			return perrf(stmt.Args[0], "unknown label %s", labelName.StrV)
+			return perrf(stmt.Args[0], "unknown label %s", labelName.Data.String())
 		}
 		for _, substmt := range labelStmts {
 			if err := RunStmt(substmt, true); err != nil {
