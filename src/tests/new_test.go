@@ -140,25 +140,7 @@ func TestVar(t *testing.T) {
 }
 
 func expectGlobalVariable(name string, value interface{}) {
-	var obj *lang.Object
-	if value == nil {
-		obj = lang.NewNil()
-	}
-	if s, ok := value.(string); ok {
-		obj = lang.NewStr(s)
-	}
-	if i, ok := value.(int); ok {
-		obj = lang.NewInt(i)
-	}
-	if b, ok := value.(bool); ok {
-		obj = lang.NewBool(b)
-	}
-	if o, ok := value.(*lang.Object); ok {
-		obj = o
-	}
-	if obj == nil {
-		gt.Fatal("cannot expect invalid value")
-	}
+	obj := lang.NewObject(value)
 	o, ok := lang.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
@@ -194,7 +176,7 @@ func TestFunc(t *testing.T) {
 func TestObject(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("global n = nil\nglobal i = 123\nglobal s = hello\nglobal b = true")
+	lang.Source("global n = nil\nglobal i = 123\nglobal s = hello\nglobal b = true\nglobal f = 12.3")
 	_, err := lang.DoAll()
 	if err != nil {
 		if perr, ok := err.(*lang.ParseError); ok {
@@ -207,6 +189,7 @@ func TestObject(t *testing.T) {
 	expectGlobalVariable("i", 123)
 	expectGlobalVariable("s", "hello")
 	expectGlobalVariable("b", true)
+	expectGlobalVariable("f", 12.3)
 }
 
 func TestLabel(t *testing.T) {
@@ -222,4 +205,27 @@ func TestLabel(t *testing.T) {
 	}
 
 	expectGlobalVariable("ok", true)
+}
+
+func TestFloat(t *testing.T) {
+	a := lang.NewInt(100)
+	b := lang.NewFloat(100.0)
+	c, ok := a.TryConvert(lang.ObjFloat)
+	if !ok {
+		t.Fatalf("could not convert %s to float", a)
+	}
+	d, ok := b.TryConvert(lang.ObjInt)
+	if !ok {
+		t.Fatalf("could not convert %s to int", b)
+	}
+	if b.Equals(c) {
+		t.Logf("b == c")
+	} else {
+		t.Fatalf("%s (b) != (c) %s", b, c)
+	}
+	if a.Equals(d) {
+		t.Logf("a == d")
+	} else {
+		t.Fatalf("%s (a) != (d) %s", a, c)
+	}
 }

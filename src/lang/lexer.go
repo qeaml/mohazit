@@ -124,7 +124,7 @@ func NextToken() *Token {
 
 	if isDigit(peek()) || peek() == '-' {
 		literal := toString(advance())
-		for isDigit(peek()) {
+		for isDigit(peek()) || peek() == '.' {
 			literal += toString(advance())
 		}
 		return makeToken(tLiteral, literal)

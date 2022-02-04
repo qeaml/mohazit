@@ -2,6 +2,7 @@ package lang
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 )
@@ -12,6 +13,7 @@ const (
 	ObjNil ObjectType = iota
 	ObjStr
 	ObjInt
+	ObjFloat
 	ObjBool
 )
 
@@ -23,6 +25,8 @@ func (t ObjectType) String() string {
 		return "Str"
 	case ObjInt:
 		return "Int"
+	case ObjFloat:
+		return "Float"
 	case ObjBool:
 		return "Bool"
 	}
@@ -43,6 +47,8 @@ func NewObject(val interface{}) *Object {
 		return NewStr(v)
 	} else if v, ok := val.(int); ok {
 		return NewInt(v)
+	} else if v, ok := val.(float64); ok {
+		return NewFloat(v)
 	} else if v, ok := val.(bool); ok {
 		return NewBool(v)
 	}
@@ -59,6 +65,13 @@ func NewStr(txt string) *Object {
 func NewInt(val int) *Object {
 	return &Object{
 		Type: ObjInt,
+		data: reflect.ValueOf(val),
+	}
+}
+
+func NewFloat(val float64) *Object {
+	return &Object{
+		Type: ObjFloat,
 		data: reflect.ValueOf(val),
 	}
 }
@@ -84,6 +97,10 @@ func (o *Object) IntV() int {
 	return int(o.data.Int())
 }
 
+func (o *Object) FloatV() float64 {
+	return o.data.Float()
+}
+
 func (o *Object) BoolV() bool {
 	return o.data.Bool()
 }
@@ -98,6 +115,8 @@ func (o *Object) Clone() *Object {
 		return NewInt(o.IntV())
 	case ObjBool:
 		return NewBool(o.BoolV())
+	case ObjFloat:
+		return NewFloat(o.FloatV())
 	}
 	panic("object of invalid type: " + string(o.Type))
 }
@@ -114,6 +133,8 @@ func (o *Object) String() string {
 		return o.StringV()
 	case ObjInt:
 		return fmt.Sprint(o.IntV())
+	case ObjFloat:
+		return fmt.Sprint(o.FloatV())
 	case ObjBool:
 		return fmt.Sprint(o.BoolV())
 	}
@@ -128,6 +149,8 @@ func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
 		return o.convertBool()
 	case ObjInt:
 		return o.convertInt()
+	case ObjFloat:
+		return o.convertFloat()
 	case ObjNil:
 		return &Object{Type: ObjNil}, true
 	}
@@ -135,10 +158,7 @@ func (o *Object) TryConvert(t ObjectType) (*Object, bool) {
 }
 
 func (o *Object) convertString() (*Object, bool) {
-	return &Object{
-		Type: ObjStr,
-		data: reflect.ValueOf(o.String()),
-	}, true
+	return NewStr(o.String()), true
 }
 
 func (o *Object) convertBool() (*Object, bool) {
@@ -148,15 +168,14 @@ func (o *Object) convertBool() (*Object, bool) {
 		v = len(o.StringV()) > 0
 	case ObjInt:
 		v = o.IntV() > 0
+	case ObjFloat:
+		v = o.FloatV() > 0.0
 	case ObjNil:
 		v = false
 	default:
 		return nil, false
 	}
-	return &Object{
-		Type: ObjBool,
-		data: reflect.ValueOf(v),
-	}, true
+	return NewBool(v), true
 }
 
 func (o *Object) convertInt() (*Object, bool) {
@@ -174,13 +193,33 @@ func (o *Object) convertInt() (*Object, bool) {
 		}
 	case ObjNil:
 		v = 0
+	case ObjFloat:
+		v = int(math.Round(o.FloatV()))
 	default:
 		return nil, false
 	}
-	return &Object{
-		Type: ObjInt,
-		data: reflect.ValueOf(v),
-	}, true
+	return NewInt(v), true
+}
+
+func (o *Object) convertFloat() (*Object, bool) {
+	v := 0.0
+	switch o.Type {
+	case ObjStr:
+		parsed, err := strconv.ParseFloat(o.StringV(), 64)
+		if err != nil {
+			return nil, false
+		}
+		v = parsed
+	case ObjBool:
+		if o.BoolV() {
+			v = 1.0
+		}
+	case ObjInt:
+		v = float64(o.IntV())
+	default:
+		return nil, false
+	}
+	return NewFloat(v), true
 }
 
 func (a *Object) Equals(b *Object) bool {
@@ -192,6 +231,8 @@ func (a *Object) Equals(b *Object) bool {
 		return true // nils are always equal
 	case ObjInt:
 		return a.IntV() == b.IntV()
+	case ObjFloat:
+		return a.FloatV() == b.FloatV()
 	case ObjBool:
 		return a.BoolV() == b.BoolV()
 	case ObjStr:

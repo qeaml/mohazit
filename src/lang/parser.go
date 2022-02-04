@@ -181,8 +181,15 @@ func parseObject(t []*Token) (*Object, error) {
 		}
 		return NewStr(v), nil
 	case tLiteral:
-		v, err := strconv.Atoi(t[0].Raw)
-		return NewInt(v), err
+		iv, err := strconv.Atoi(t[0].Raw)
+		if err != nil {
+			fv, err := strconv.ParseFloat(t[0].Raw, 64)
+			if err != nil {
+				return NewNil(), err
+			}
+			return NewFloat(fv), nil
+		}
+		return NewInt(iv), err
 	default:
 		return NewNil(), perrf(t[0], "unexpected %s in object value", t[0])
 	}
