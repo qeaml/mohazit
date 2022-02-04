@@ -39,7 +39,7 @@ func fSockDial(args []*lang.Object) (*lang.Object, error) {
 	if addrObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("address must be a string")
 	}
-	addr = addrObj.Data.String()
+	addr = addrObj.StringV()
 	if len(args) != 2 {
 		streamName = fmt.Sprintf("socket%d", streamsSoFar)
 	} else {
@@ -69,7 +69,7 @@ func fSockListen(args []*lang.Object) (*lang.Object, error) {
 	if addrObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("address must be a string")
 	}
-	addr = addrObj.Data.String()
+	addr = addrObj.StringV()
 	if len(args) != 2 {
 		sockName = fmt.Sprintf("socket%d", streamsSoFar)
 	} else {
@@ -96,7 +96,7 @@ func fSockAccept(args []*lang.Object) (*lang.Object, error) {
 	if sockNameObj.Type != lang.ObjStr {
 		return lang.NewNil(), badArg.Get("socket name must be a string")
 	}
-	sockName = sockNameObj.Data.String()
+	sockName = sockNameObj.StringV()
 
 	l, ok := Listeners[sockName]
 	if !ok {
@@ -126,10 +126,10 @@ func fSockAddr(args []*lang.Object) (*lang.Object, error) {
 		if a.Type != lang.ObjInt {
 			return lang.NewNil(), badArg.Get("addr values must be integers")
 		}
-		if a.Data.Int() > 255 || a.Data.Int() < 0 {
+		if a.IntV() > 255 || a.IntV() < 0 {
 			return lang.NewNil(), badArg.Get("addr values must be 8-bit")
 		}
-		b = append(b, byte(a.Data.Int()))
+		b = append(b, byte(a.IntV()))
 	}
 	ip := net.IPv4(b[0], b[1], b[2], b[3])
 	return lang.NewObject(ip), nil

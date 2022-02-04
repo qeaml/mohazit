@@ -17,7 +17,7 @@ func fFileCreate(args []*lang.Object) (*lang.Object, error) {
 	if fileObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	fileName = fileObj.Data.String()
+	fileName = fileObj.StringV()
 
 	fmt.Printf("creating file `%s`\n", fileName)
 
@@ -37,7 +37,7 @@ func fFileDelete(args []*lang.Object) (*lang.Object, error) {
 	if fileObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	fileName = fileObj.Data.String()
+	fileName = fileObj.StringV()
 
 	fmt.Printf("deleting file `%s`\n", fileName)
 
@@ -54,12 +54,12 @@ func fFileRename(args []*lang.Object) (*lang.Object, error) {
 	if oldObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	oldName = oldObj.Data.String()
+	oldName = oldObj.StringV()
 	newObj := args[1]
 	if newObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	newName = newObj.Data.String()
+	newName = newObj.StringV()
 
 	fmt.Printf("renaming file `%s` to `%s`\n", oldName, newName)
 
@@ -75,7 +75,7 @@ func fFileExists(args []*lang.Object) (*lang.Object, error) {
 	if fileObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	fileName = fileObj.Data.String()
+	fileName = fileObj.StringV()
 
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -98,7 +98,7 @@ func fWalk(args []*lang.Object) (*lang.Object, error) {
 	if fileObj.Type != lang.ObjStr {
 		return lang.NewNil(), badType.Get("file name must be a string")
 	}
-	fileName = fileObj.Data.String()
+	fileName = fileObj.StringV()
 
 	fmt.Printf("changing working directory to `%s`\n", fileName)
 

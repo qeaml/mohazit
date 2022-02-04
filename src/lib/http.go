@@ -23,8 +23,8 @@ func fHttpGet(args []*lang.Object) (*lang.Object, error) {
 	if in.Type != lang.ObjStr {
 		return nil, badType.Get("URL must be a string")
 	}
-	fmt.Printf("sending HTTP request %d: GET %s\n", respCount, in.Data.String())
-	resp, err := client.Get(in.Data.String(), nil)
+	fmt.Printf("sending HTTP request %d: GET %s\n", respCount, in.StringV())
+	resp, err := client.Get(in.StringV(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func fHttpOk(args []*lang.Object) (*lang.Object, error) {
 	respName := lastResp
 	if len(args) > 1 {
 		if args[0].Type == lang.ObjStr {
-			respName = args[0].Data.String()
+			respName = args[0].StringV()
 		} else {
 			return lang.NewNil(), badType.Get("response name must be a string")
 		}
