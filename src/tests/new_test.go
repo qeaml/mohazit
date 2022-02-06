@@ -95,7 +95,7 @@ func TestInterpreter(t *testing.T) {
 func TestCall(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("say hello\nsay world\ndata-stream blajh\ndata-write hello world\ndata-close")
+	lang.Source("say hello\nsay world\nbuf-create blajh\ndata-write hello world\ndata-close")
 	_, err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())

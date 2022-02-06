@@ -36,7 +36,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		for _, tkn := range stmt.Args {
 			if op == nil {
 				switch tkn.Type {
-				case tIdent, tLiteral, tSpace:
+				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					l = append(l, tkn)
 				case tOper:
 					op = tkn
@@ -47,7 +47,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				}
 			} else {
 				switch tkn.Type {
-				case tIdent, tLiteral, tSpace:
+				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					r = append(r, tkn)
 				case tOper:
 					return perr(tkn, "operator chaining not yet implemented")

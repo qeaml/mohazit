@@ -36,11 +36,12 @@ func Load() {
 		"run":   fRun,
 		"start": fRun,
 		// data streams
-		"data-stream": fDataStream,
-		"data-read":   fDataRead,
-		"data-write":  fDataWrite,
-		"data-seek":   fDataSeek,
-		"data-close":  fDataClose,
+		"buf-create": fBufCreate,
+		"data-read":  fDataRead,
+		"data-write": fDataWrite,
+		"data-seek":  fDataSeek,
+		"data-close": fDataClose,
+		"data-copy":  fDataCopy,
 		// http
 		"http-get": fHttpGet,
 		"http-ok":  fHttpOk,

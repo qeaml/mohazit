@@ -164,7 +164,7 @@ func fFileOpen(args []*lang.Object) (*lang.Object, error) {
 	return lang.NewStr(streamName), nil
 }
 
-func fDataStream(args []*lang.Object) (*lang.Object, error) {
+func fBufCreate(args []*lang.Object) (*lang.Object, error) {
 	var streamName string
 	if len(args) == 0 {
 		streamName = fmt.Sprintf("buffer%d", streamsSoFar)
@@ -175,9 +175,43 @@ func fDataStream(args []*lang.Object) (*lang.Object, error) {
 
 	fmt.Printf("opening stream `%s`\n", streamName)
 
-	streams[streamName] = &BufferStream{}
+	streams[streamName] = &GenericStream{}
 	lastStream = streamName
 	return lang.NewStr(streamName), nil
+}
+
+func fDataCopy(args []*lang.Object) (*lang.Object, error) {
+	var fromName string
+	var toName string
+	if len(args) != 2 {
+		return lang.NewNil(), moreArgs.Get("need from and to args")
+	}
+	f := args[0]
+	if f.Type != lang.ObjStr {
+		return lang.NewNil(), badArg.Get("from must be a string")
+	}
+	fromName = f.StrV
+	t := args[1]
+	if t.Type != lang.ObjStr {
+		return lang.NewNil(), badArg.Get("from must be a string")
+	}
+	toName = t.StrV
+
+	fromStream, ok := streams[fromName]
+	if !ok {
+		return lang.NewNil(), badState.Get("could not find stream " + fromName)
+	}
+	toStream, ok := streams[toName]
+	if !ok {
+		return lang.NewNil(), badState.Get("could not find stream " + toName)
+	}
+
+	data, err := io.ReadAll(fromStream)
+	if err != io.EOF && err != nil {
+		return lang.NewNil(), err
+	}
+	n, err := toStream.Write(data)
+	return lang.NewObject(n), err
 }
 
 type DummyStream struct{}
