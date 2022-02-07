@@ -54,6 +54,10 @@ func TestParser(t *testing.T) {
 	lang.Source("var test = 123")
 
 	expectStatement("var", 0, 3, 0, 4, 0, 2)
+
+	lang.Source("data-write hello\\\nworld")
+
+	expectStatement("data-write", 0, 3, 7, 3)
 }
 
 func expectStatement(kw string, args ...lang.TokenType) {
