@@ -34,11 +34,20 @@ func isBracket(c byte) bool {
 }
 
 func isOpenBracket(c byte) bool {
-	return c == '(' || c == '[' || c == '{' || c == '<'
+	return c == '[' || c == '{'
 }
 
 func isCloseBracket(c byte) bool {
-	return c == ')' || c == ']' || c == '}' || c == '>'
+	return c == ']' || c == '}'
+}
+
+func isOper(c byte) bool {
+	for _, opc := range OperChars {
+		if opc == c {
+			return true
+		}
+	}
+	return false
 }
 
 func isValid(c byte) bool {

@@ -1,5 +1,7 @@
 package lang
 
+import "fmt"
+
 var globals = make(map[string]*Object)
 var locals = make(map[string]*Object)
 var labels = make(map[string][]*Statement)
@@ -7,17 +9,20 @@ var labels = make(map[string][]*Statement)
 // DoAll runs as many statements as possible, stopping if there's a problem
 // reading the next statement (first value will be false) or if there's a
 // problem executing said statement (first value will be true)
-func DoAll() (ok bool, err error) {
+func DoAll() error {
 	for {
+		if !canAdvance() {
+			return nil
+		}
 		stmt, err := NextStmt()
 		if err != nil {
-			return false, err
+			return err
 		}
 		if stmt == nil {
-			return false, nil
+			continue
 		}
 		if err = RunStmt(stmt, false); err != nil {
-			return true, err
+			return err
 		}
 	}
 }
@@ -32,16 +37,15 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		l := []*Token{}
 		var op *Token = nil
 		r := []*Token{}
-	ifLoop:
 		for _, tkn := range stmt.Args {
 			if op == nil {
 				switch tkn.Type {
 				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					l = append(l, tkn)
+					fmt.Printf("\tL:%s", tkn)
 				case tOper:
 					op = tkn
-				case tLinefeed:
-					break ifLoop
+					fmt.Printf("\nOP:%s\n", op)
 				default:
 					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 				}
@@ -49,14 +53,20 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				switch tkn.Type {
 				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					r = append(r, tkn)
+					fmt.Printf("\tR:%s", tkn)
 				case tOper:
 					return perr(tkn, "operator chaining not yet implemented")
-				case tLinefeed:
-					break ifLoop
 				default:
 					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 				}
 			}
+		}
+		fmt.Printf("\n")
+		if len(l) < 1 {
+			return perr(stmt.KwToken, "not enough tokens on left side of operator")
+		}
+		if len(r) < 1 {
+			return perrf(stmt.KwToken, "not enough tokens on right side of operator (want 1, got %d)", len(r))
 		}
 		lVal, err := parseObject(l)
 		if err != nil {

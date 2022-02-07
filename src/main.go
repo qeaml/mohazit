@@ -34,20 +34,15 @@ func main() {
 			exit(eRead)
 		}
 		lang.Source(string(s))
-		for {
-			cont, err := lang.DoAll()
-			if !cont {
-				break
+		err = lang.DoAll()
+		if err != nil {
+			if perr, ok := err.(*lang.ParseError); ok {
+				fmt.Printf("%s:%d:%d [ERROR] %s",
+					os.Args[1], perr.Where.Line, perr.Where.Col, perr.Error())
+			} else {
+				fmt.Println(err.Error())
 			}
-			if err != nil {
-				if perr, ok := err.(*lang.ParseError); ok {
-					fmt.Printf("%s:%d:%d [ERROR] %s",
-						os.Args[1], perr.Where.Line, perr.Where.Col, perr.Error())
-				} else {
-					fmt.Println(err.Error())
-				}
-				exit(eScript)
-			}
+			exit(eScript)
 		}
 	}
 	exit(0)

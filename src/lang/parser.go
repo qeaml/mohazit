@@ -15,7 +15,12 @@ type Statement struct {
 func nextStmtTokens() []*Token {
 	out := []*Token{}
 	var t *Token
-	for hasNextToken() {
+	i := 0
+	for canAdvance() {
+		i++
+		if i > 50 {
+			panic("problematic loop")
+		}
 		t = NextToken()
 		if t == nil {
 			continue
@@ -30,7 +35,7 @@ func nextStmtTokens() []*Token {
 
 // Next reads and returns the next statement in the input string
 func NextStmt() (*Statement, error) {
-	raw := nextStmtTokens()
+	raw := trimSpaceTokens(nextStmtTokens())
 	if len(raw) < 1 {
 		return nil, nil
 	}
@@ -91,6 +96,9 @@ outer:
 // Tokens2object reads a single object from the given token slice
 func parseObject(t []*Token) (*Object, error) {
 	t = trimSpaceTokens(t)
+	if len(t) < 1 {
+		return NewNil(), nil
+	}
 	switch t[0].Type {
 	case tRef:
 		if len(t) > 1 {

@@ -12,7 +12,8 @@ var gt *testing.T
 func TestLexer(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("var test = 123")
+	lang.Source("var test = 123\n")
+
 	expectToken(3, "var")  // ident
 	expectToken(0, " ")    // space
 	expectToken(3, "test") // ident
@@ -21,7 +22,9 @@ func TestLexer(t *testing.T) {
 	expectToken(0, " ")    // space
 	expectToken(2, "123")  // literal
 	expectToken(1, "\n")
+
 	lang.Source("say {deez} nuts")
+
 	expectToken(3, "say")
 	expectToken(0, " ")
 	expectToken(6, "deez")
@@ -49,6 +52,7 @@ func TestParser(t *testing.T) {
 	lib.Load()
 	gt = t
 	lang.Source("var test = 123")
+
 	expectStatement("var", 0, 3, 0, 4, 0, 2)
 }
 
@@ -79,24 +83,28 @@ func expectStatement(kw string, args ...lang.TokenType) {
 func TestInterpreter(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("file-create deez.txt\nfile-rename deez.txt \\ deez nuts.txt\nfile-delete deez nuts.txt")
-	for {
-		cont, err := lang.DoAll()
-		if !cont {
-			break
-		}
-		if err != nil {
-			t.Fatal(err.Error())
-			break
-		}
+	lang.Source(`
+		file-create deez.txt
+		file-rename deez.txt \ deez nuts.txt
+		file-delete deez nuts.txt
+	`)
+	err := lang.DoAll()
+	if err != nil {
+		t.Fatal(err.Error())
 	}
 }
 
 func TestCall(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("say hello\nsay world\nbuf-create blajh\ndata-write hello world\ndata-close")
-	_, err := lang.DoAll()
+	lang.Source(`
+		say hello
+		say world
+		buf-create blajh
+		data-write hello world
+		data-close
+	`)
+	err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -105,23 +113,49 @@ func TestCall(t *testing.T) {
 func TestIf(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("if 3 = 3\nglobal a-ok = true\nend\nif 1 = 3\nsay whoa\nelse\nglobal b-ok = true\nend\nunless 1 = 3\nglobal c-ok = true\nend")
-	_, err := lang.DoAll()
+	lang.Source(`
+		if 3 = 3
+			global a-ok = true
+		end
+		if 1 = 3
+			say whoa
+		else
+			global b-ok = true
+		end
+		unless 1 = 3
+			global c-ok = true
+		end
+		var my-var = 100000
+		if 1 > {my-var}
+			say woha!!!
+		else
+			global d-ok = true
+		end
+	`)
+	err := lang.DoAll()
 	if err != nil {
-		t.Fatal(err.Error())
+		if perr, ok := err.(*lang.ParseError); ok {
+			t.Fatalf("%s @%s", perr.Error(), perr.Where)
+		} else {
+			t.Fatal(err.Error())
+		}
 	}
 
 	expectGlobalVariable("a-ok", true)
 	expectGlobalVariable("b-ok", true)
 	expectGlobalVariable("c-ok", true)
+	expectGlobalVariable("d-ok", true)
 }
 
 func TestVar(t *testing.T) {
 	lib.Load()
 	gt = t
-
-	lang.Source("global i = 123\nvar j = 321\nset k=101010")
-	_, err := lang.DoAll()
+	lang.Source(`
+		global i = 123
+		var j = 321
+		set k=101010
+	`)
+	err := lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -131,7 +165,7 @@ func TestVar(t *testing.T) {
 	expectGlobalVariable("k", 101010)
 
 	lang.Source("set l = {i}")
-	_, err = lang.DoAll()
+	err = lang.DoAll()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -140,25 +174,7 @@ func TestVar(t *testing.T) {
 }
 
 func expectGlobalVariable(name string, value interface{}) {
-	var obj *lang.Object
-	if value == nil {
-		obj = lang.NewNil()
-	}
-	if s, ok := value.(string); ok {
-		obj = lang.NewStr(s)
-	}
-	if i, ok := value.(int); ok {
-		obj = lang.NewInt(i)
-	}
-	if b, ok := value.(bool); ok {
-		obj = lang.NewBool(b)
-	}
-	if o, ok := value.(*lang.Object); ok {
-		obj = o
-	}
-	if obj == nil {
-		gt.Fatal("cannot expect invalid value")
-	}
+	obj := lang.NewObject(value)
 	o, ok := lang.GetGlobalVar(name)
 	if !ok {
 		gt.Fatalf("global varialbe %s does not exist", name)
@@ -177,8 +193,12 @@ func expectGlobalVariable(name string, value interface{}) {
 func TestFunc(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("global a = [inc] 10\nvar b = [dec] 101\n set c= [dec dec dec] 9")
-	_, err := lang.DoAll()
+	lang.Source(`
+		global a = [inc] 10
+		var b= [dec] 101
+		set c=[dec dec dec] 9
+	`)
+	err := lang.DoAll()
 	if err != nil {
 		if perr, ok := err.(*lang.ParseError); ok {
 			t.Logf("%s %s", perr.Where.String(), perr.Error())
@@ -194,8 +214,13 @@ func TestFunc(t *testing.T) {
 func TestObject(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("global n = nil\nglobal i = 123\nglobal s = hello\nglobal b = true")
-	_, err := lang.DoAll()
+	lang.Source(`
+		global n = nil
+		global i = 123
+		global s = hello
+		global b = true
+	`)
+	err := lang.DoAll()
 	if err != nil {
 		if perr, ok := err.(*lang.ParseError); ok {
 			t.Logf("%s %s", perr.Where.String(), perr.Error())
@@ -212,8 +237,13 @@ func TestObject(t *testing.T) {
 func TestLabel(t *testing.T) {
 	lib.Load()
 	gt = t
-	lang.Source("label hello-world\nglobal ok = true\nend\ngoto hello-world")
-	_, err := lang.DoAll()
+	lang.Source(`
+		label hello-world
+			global ok = true
+		end
+		goto hello-world
+	`)
+	err := lang.DoAll()
 	if err != nil {
 		if perr, ok := err.(*lang.ParseError); ok {
 			t.Logf("%s %s", perr.Where.String(), perr.Error())

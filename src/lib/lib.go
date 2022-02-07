@@ -59,6 +59,12 @@ func Load() {
 		">":  cGreater,
 		"<":  cLesser,
 	}
+	lang.OperChars = []byte{}
+	for op := range lang.Comps {
+		for _, c := range op {
+			lang.OperChars = append(lang.OperChars, byte(c))
+		}
+	}
 }
 
 func Cleanup() error {

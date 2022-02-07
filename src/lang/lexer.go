@@ -64,15 +64,15 @@ func Source(src string) {
 // Returns 0 if there are no more readable characters.
 func peek() byte {
 	if pos >= len(source) {
-		return 0
+		panic("excessive peek() call")
 	}
 	return source[pos]
 }
 
 // peekNext is the same as peek, but returns the next character over instead
 func peekNext() byte {
-	if pos >= len(source)-1 {
-		return 0
+	if pos+1 >= len(source) {
+		panic("excessive peekNext() call")
 	}
 	return source[pos+1]
 }
@@ -87,22 +87,24 @@ func advance() byte {
 // nextToken returns the next token in the input string, or nil if there are no
 // more tokens left
 func NextToken() *Token {
-	if isSpace(peek()) {
+	c := peek()
+
+	if isSpace(c) {
 		return makeToken(tSpace, toString(advance()))
 	}
 
-	if peek() == '\r' && peekNext() == '\n' {
+	if c == '\r' && peekNext() == '\n' {
 		return makeToken(tLinefeed, toString(advance())+toString(advance()))
 	}
-	if peek() == '\n' {
+	if c == '\n' {
 		return makeToken(tLinefeed, toString(advance()))
 	}
 
-	if isBracket(peek()) {
-		if peek() == '{' {
+	if isBracket(c) {
+		if c == '{' {
 			_ = advance()
 			dump := ""
-			for {
+			for canAdvance() {
 				if peek() == '}' {
 					_ = advance()
 					break
@@ -114,23 +116,23 @@ func NextToken() *Token {
 		return makeToken(tBracket, toString(advance()))
 	}
 
-	if isIdentStart(peek()) {
+	if isIdentStart(c) {
 		ident := toString(advance())
-		for isIdentCont(peek()) {
+		for canAdvance() && isIdentCont(peek()) {
 			ident += toString(advance())
 		}
 		return makeToken(tIdent, ident)
 	}
 
-	if isDigit(peek()) || peek() == '-' {
+	if isDigit(c) || c == '-' {
 		literal := toString(advance())
-		for isDigit(peek()) {
+		for canAdvance() && isDigit(peek()) {
 			literal += toString(advance())
 		}
 		return makeToken(tLiteral, literal)
 	}
 
-	if peek() == '\\' {
+	if c == '\\' {
 		_ = advance()
 		e := advance()
 		switch e {
@@ -147,24 +149,24 @@ func NextToken() *Token {
 		}
 	}
 
-	dump := ""
-	for !isValid(peek()) {
-		dump += toString(advance())
-	}
-	for op := range Comps {
-		if dump == op {
-			return makeToken(tOper, dump)
+	if isOper(c) {
+		dump := toString(advance())
+		for canAdvance() && isOper(peek()) {
+			dump += toString(advance())
 		}
+		return makeToken(tOper, dump)
 	}
-	if len(dump) == 0 {
-		return nil
+
+	dump := toString(advance())
+	for canAdvance() && !isValid(peek()) {
+		dump += toString(advance())
 	}
 	return makeToken(tUnknown, dump)
 }
 
-// hasNextToken returns true if there may be more tokens in the input string
-func hasNextToken() bool {
-	return pos != len(source)
+// canAdvance returns true if there may be more tokens in the input string
+func canAdvance() bool {
+	return pos < len(source)
 }
 
 // makeToken creates a *Token from the input and advances the line and col
@@ -188,3 +190,5 @@ func makeTokenAlt(t TokenType, r string, len uint) *Token {
 	col += len
 	return token
 }
+
+var OperChars []byte
