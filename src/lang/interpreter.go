@@ -32,54 +32,9 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		if !isLocal { // don't naively wipe locals
 			locals = make(map[string]*Object)
 		}
-		l := []*Token{}
-		var op *Token = nil
-		r := []*Token{}
-		for _, tkn := range stmt.Args {
-			if op == nil {
-				switch tkn.Type {
-				case tIdent, tLiteral, tSpace, tBracket, tRef:
-					l = append(l, tkn)
-				case tOper:
-					op = tkn
-				default:
-					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
-				}
-			} else {
-				switch tkn.Type {
-				case tIdent, tLiteral, tSpace, tBracket, tRef:
-					r = append(r, tkn)
-				case tOper:
-					return perr(tkn, "operator chaining not yet implemented")
-				default:
-					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
-				}
-			}
-		}
-		if len(l) < 1 {
-			return perr(stmt.KwToken, "not enough tokens on left side of operator")
-		}
-		if len(r) < 1 {
-			return perrf(stmt.KwToken, "not enough tokens on right side of operator (want 1, got %d)", len(r))
-		}
-		lVal, err := parseObject(l)
+		v, err := parseConditional(stmt.Args, stmt.Keyword == "unless")
 		if err != nil {
 			return err
-		}
-		rVal, err := parseObject(r)
-		if err != nil {
-			return err
-		}
-		c, ok := Comps[op.Raw]
-		if !ok {
-			return perrf(op, "unknown comparator %s", op.Raw)
-		}
-		v, err := c(lVal, rVal)
-		if err != nil {
-			return err
-		}
-		if stmt.Keyword == "unless" {
-			v = !v
 		}
 		for {
 			substmt, err := NextStmt()
@@ -155,46 +110,7 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 	case "end":
 		return perr(stmt.KwToken, "end statement outside of block")
 	case "local", "global", "var", "set":
-		l := []*Token{}
-		mid := false
-		r := []*Token{}
-	varLoop:
-		for _, tkn := range stmt.Args {
-			if !mid {
-				switch tkn.Type {
-				case tIdent, tSpace:
-					l = append(l, tkn)
-				case tOper:
-					if tkn.Raw == "=" {
-						mid = true
-					} else {
-						return perrf(tkn, "expected =, got %s", tkn.Raw)
-					}
-				case tLinefeed:
-					break varLoop
-				default:
-					return perrf(tkn, "unexpected %s in variable name", tkn.Type.String())
-				}
-			} else {
-				switch tkn.Type {
-				case tIdent, tLiteral, tSpace, tBracket, tRef:
-					r = append(r, tkn)
-				case tLinefeed:
-					break varLoop
-				default:
-					return perrf(tkn, "unexpected %s in variable value", tkn.Type.String())
-				}
-			}
-		}
-		l = trimSpaceTokens(l)
-		if len(l) > 1 {
-			return perr(l[0], "too many tokens before =")
-		}
-		lVal := l[0]
-		if lVal.Type != tIdent {
-			return perrf(lVal, "expected identifier, got %s", lVal.Type.String())
-		}
-		rVal, err := parseObject(r)
+		name, value, err := parseAssignment(stmt.Args)
 		if err != nil {
 			return err
 		}
@@ -202,14 +118,14 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 			if !isLocal {
 				return perr(stmt.KwToken, "local variable in global context")
 			}
-			locals[lVal.Raw] = rVal
+			locals[name] = value
 		} else if stmt.Keyword == "global" {
-			globals[lVal.Raw] = rVal
+			globals[name] = value
 		} else {
 			if isLocal {
-				locals[lVal.Raw] = rVal
+				locals[name] = value
 			} else {
-				globals[lVal.Raw] = rVal
+				globals[name] = value
 			}
 		}
 		return nil

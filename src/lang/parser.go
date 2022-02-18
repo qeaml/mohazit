@@ -220,3 +220,102 @@ func trimSpaceTokens(t []*Token) []*Token {
 	}
 	return rtrim
 }
+
+func parseConditional(tokens []*Token, negate bool) (bool, error) {
+	l := []*Token{}
+	var op *Token = nil
+	r := []*Token{}
+	for _, tkn := range tokens {
+		if op == nil {
+			switch tkn.Type {
+			case tIdent, tLiteral, tSpace, tBracket, tRef:
+				l = append(l, tkn)
+			case tOper:
+				op = tkn
+			default:
+				return false, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
+			}
+		} else {
+			switch tkn.Type {
+			case tIdent, tLiteral, tSpace, tBracket, tRef:
+				r = append(r, tkn)
+			case tOper:
+				return false, perr(tkn, "operator chaining not yet implemented")
+			default:
+				return false, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
+			}
+		}
+	}
+	if len(l) < 1 {
+		return false, perr(op, "not enough tokens on left side of operator")
+	}
+	if len(r) < 1 {
+		return false, perrf(op, "not enough tokens on right side of operator (want 1, got %d)", len(r))
+	}
+	lVal, err := parseObject(l)
+	if err != nil {
+		return false, err
+	}
+	rVal, err := parseObject(r)
+	if err != nil {
+		return false, err
+	}
+	c, ok := Comps[op.Raw]
+	if !ok {
+		return false, perrf(op, "unknown comparator %s", op.Raw)
+	}
+	v, err := c(lVal, rVal)
+	if err != nil {
+		return false, err
+	}
+	if negate {
+		v = !v
+	}
+	return v, nil
+}
+
+func parseAssignment(tokens []*Token) (string, *Object, error) {
+	l := []*Token{}
+	mid := false
+	r := []*Token{}
+	for _, tkn := range tokens {
+		if !mid {
+			switch tkn.Type {
+			case tIdent, tSpace:
+				l = append(l, tkn)
+			case tOper:
+				if tkn.Raw == "=" {
+					mid = true
+				} else {
+					return "", nil, perrf(tkn, "expected =, got %s", tkn.Raw)
+				}
+			case tLinefeed:
+				break
+			default:
+				return "", nil, perrf(tkn, "unexpected %s in variable name", tkn.Type.String())
+			}
+		} else {
+			switch tkn.Type {
+			case tIdent, tLiteral, tSpace, tBracket, tRef:
+				r = append(r, tkn)
+			case tLinefeed:
+				break
+			default:
+				return "", nil, perrf(tkn, "unexpected %s in variable value", tkn.Type.String())
+			}
+		}
+	}
+	l = trimSpaceTokens(l)
+	if len(l) > 1 {
+		return "", nil, perr(l[0], "too many tokens before =")
+	}
+	lVal := l[0]
+	if lVal.Type != tIdent {
+		return "", nil, perrf(lVal, "expected identifier, got %s", lVal.Type.String())
+	}
+	rVal, err := parseObject(r)
+	if err != nil {
+		return "", nil, err
+	}
+	return lVal.Raw, rVal, nil
+}
