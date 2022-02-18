@@ -25,8 +25,6 @@ func (t ObjectType) String() string {
 		return "Int"
 	case ObjBool:
 		return "Bool"
-	case ObjRef:
-		return "Ref"
 	}
 	panic("invalid object type: " + string(uint8(t)))
 }
@@ -36,7 +34,6 @@ type Object struct {
 	StrV  string
 	IntV  int
 	BoolV bool
-	RefV  string
 }
 
 func (o *Object) Repr() string {
@@ -49,8 +46,6 @@ func (o *Object) Repr() string {
 		return fmt.Sprintf("[Int %d]", o.IntV)
 	case ObjBool:
 		return fmt.Sprintf("[Bool %t]", o.BoolV)
-	case ObjRef:
-		return "[Ref {" + o.StrV + "}]"
 	}
 	panic("object of invalid type: " + string(uint8(o.Type)))
 }
@@ -75,7 +70,6 @@ func (o *Object) Clone() *Object {
 		StrV:  o.StrV,
 		IntV:  o.IntV,
 		BoolV: o.BoolV,
-		RefV:  o.RefV,
 	}
 }
 
@@ -197,9 +191,6 @@ func (a *Object) Equals(b *Object) bool {
 		return a.BoolV == b.BoolV
 	case ObjStr:
 		return a.StrV == b.StrV
-	case ObjRef:
-		// two refs to the same variable will have the same effective value
-		return a.RefV == b.RefV
 	}
 	panic("object of invalid type: " + string(a.Type))
 }
