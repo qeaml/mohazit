@@ -1,7 +1,5 @@
 package lang
 
-import "fmt"
-
 var globals = make(map[string]*Object)
 var locals = make(map[string]*Object)
 var labels = make(map[string][]*Statement)
@@ -42,10 +40,8 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				switch tkn.Type {
 				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					l = append(l, tkn)
-					fmt.Printf("\tL:%s", tkn)
 				case tOper:
 					op = tkn
-					fmt.Printf("\nOP:%s\n", op)
 				default:
 					return perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 				}
@@ -53,7 +49,6 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				switch tkn.Type {
 				case tIdent, tLiteral, tSpace, tBracket, tRef:
 					r = append(r, tkn)
-					fmt.Printf("\tR:%s", tkn)
 				case tOper:
 					return perr(tkn, "operator chaining not yet implemented")
 				default:
@@ -61,7 +56,6 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 				}
 			}
 		}
-		fmt.Printf("\n")
 		if len(l) < 1 {
 			return perr(stmt.KwToken, "not enough tokens on left side of operator")
 		}
