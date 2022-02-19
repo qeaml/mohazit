@@ -194,3 +194,21 @@ func (a *Object) Equals(b *Object) bool {
 	}
 	panic("object of invalid type: " + string(a.Type))
 }
+
+type refreshable struct {
+	isVar   bool
+	varName string
+	obj     *Object
+}
+
+func (r refreshable) Get() (v *Object, ok bool) {
+	if r.isVar {
+		v, ok = locals[r.varName]
+		if ok {
+			return
+		}
+		v, ok = globals[r.varName]
+		return
+	}
+	return r.obj, true
+}

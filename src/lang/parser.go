@@ -222,21 +222,28 @@ func trimSpaceTokens(t []*Token) []*Token {
 }
 
 type conditional struct {
-	Left   *Object
+	Left   refreshable
 	Oper   VComp
-	Right  *Object
+	Right  refreshable
 	Negate bool
 }
 
 func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 	l := []*Token{}
+	var lRef string
 	var op *Token = nil
 	r := []*Token{}
+	var rRef string
 	for _, tkn := range tokens {
 		if op == nil {
 			switch tkn.Type {
-			case tIdent, tLiteral, tSpace, tBracket, tRef:
+			case tIdent, tLiteral, tSpace, tBracket:
 				l = append(l, tkn)
+			case tRef:
+				if len(lRef) > 0 {
+					return nil, perr(tkn, "too many values")
+				}
+				lRef = tkn.Raw
 			case tOper:
 				op = tkn
 			default:
@@ -244,8 +251,13 @@ func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 			}
 		} else {
 			switch tkn.Type {
-			case tIdent, tLiteral, tSpace, tBracket, tRef:
+			case tIdent, tLiteral, tSpace, tBracket:
 				r = append(r, tkn)
+			case tRef:
+				if len(rRef) > 0 {
+					return nil, perr(tkn, "too many values")
+				}
+				rRef = tkn.Raw
 			case tOper:
 				return nil, perr(tkn, "operator chaining not yet implemented")
 			default:
@@ -253,19 +265,30 @@ func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 			}
 		}
 	}
-	if len(l) < 1 {
+	if len(l) < 1 && len(lRef) < 1 {
 		return nil, perr(op, "not enough tokens on left side of operator")
 	}
-	if len(r) < 1 {
+	if len(r) < 1 && len(rRef) < 1 {
 		return nil, perrf(op, "not enough tokens on right side of operator (want 1, got %d)", len(r))
 	}
-	lVal, err := parseObject(l)
-	if err != nil {
-		return nil, err
+	var lVal, rVal refreshable
+	if len(lRef) > 0 {
+		lVal = refreshable{true, lRef, nil}
+	} else {
+		o, err := parseObject(l)
+		if err != nil {
+			return nil, err
+		}
+		lVal = refreshable{false, "", o}
 	}
-	rVal, err := parseObject(r)
-	if err != nil {
-		return nil, err
+	if len(rRef) > 0 {
+		rVal = refreshable{true, rRef, nil}
+	} else {
+		o, err := parseObject(r)
+		if err != nil {
+			return nil, err
+		}
+		rVal = refreshable{false, "", o}
 	}
 	c, ok := Comps[op.Raw]
 	if !ok {
