@@ -244,6 +244,7 @@ func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 					return nil, perr(tkn, "too many values")
 				}
 				lRef = tkn.Raw
+				l = []*Token{tkn}
 			case tOper:
 				op = tkn
 			default:
@@ -258,6 +259,7 @@ func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 					return nil, perr(tkn, "too many values")
 				}
 				rRef = tkn.Raw
+				r = []*Token{tkn}
 			case tOper:
 				return nil, perr(tkn, "operator chaining not yet implemented")
 			default:
@@ -273,22 +275,22 @@ func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 	}
 	var lVal, rVal refreshable
 	if len(lRef) > 0 {
-		lVal = refreshable{true, lRef, nil}
+		lVal = refreshable{l[0], true, lRef, nil}
 	} else {
 		o, err := parseObject(l)
 		if err != nil {
 			return nil, err
 		}
-		lVal = refreshable{false, "", o}
+		lVal = refreshable{l[0], false, "", o}
 	}
 	if len(rRef) > 0 {
-		rVal = refreshable{true, rRef, nil}
+		rVal = refreshable{r[0], true, rRef, nil}
 	} else {
 		o, err := parseObject(r)
 		if err != nil {
 			return nil, err
 		}
-		rVal = refreshable{false, "", o}
+		rVal = refreshable{r[0], false, "", o}
 	}
 	c, ok := Comps[op.Raw]
 	if !ok {

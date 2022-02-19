@@ -196,9 +196,10 @@ func (a *Object) Equals(b *Object) bool {
 }
 
 type refreshable struct {
-	isVar   bool
-	varName string
-	obj     *Object
+	Tkn *Token
+	isVar      bool
+	varName    string
+	obj        *Object
 }
 
 func (r refreshable) Get() (v *Object, ok bool) {

@@ -79,6 +79,57 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 			}
 		}
 		return nil
+	case "loop", "repeat":
+		var cond *conditional = nil
+		body := []*Statement{}
+	loopLoop:
+		for {
+			substmt, err := NextStmt()
+			if err != nil {
+				return err
+			}
+			if substmt == nil {
+				break
+			}
+			switch substmt.Keyword {
+			case "while":
+				cond, err = parseConditional(substmt.Args, false)
+				if err != nil {
+					return err
+				}
+				break loopLoop
+			default:
+				body = append(body, substmt)
+			}
+		}
+		if cond == nil {
+			return perr(stmt.KwToken, "loop is never given a condition")
+		}
+		for {
+			l, ok := cond.Left.Get()
+			if !ok {
+				return perr(cond.Left.Tkn, "coult not determine left side value")
+			}
+			r, ok := cond.Right.Get()
+			if !ok {
+				return perr(cond.Right.Tkn, "coult not determine right side value")
+			}
+			v, err := cond.Oper(l, r)
+			if err != nil {
+				return err
+			}
+			if cond.Negate {
+				v = !v
+			}
+			if v {
+				for _, s := range body {
+					err = RunStmt(s, true)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
 	case "label":
 		if isLocal {
 			return perr(stmt.KwToken, "labels not allowed in blocks")
