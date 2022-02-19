@@ -257,3 +257,29 @@ func TestLabel(t *testing.T) {
 
 	expectGlobalVariable("ok", true)
 }
+
+func TestLoop(t *testing.T) {
+	lib.Load()
+	gt = t
+	lang.Source(`
+		global abc = false
+		loop
+			global abc = true
+		while 0 = 1
+		set i = 0
+		repeat
+			say hi
+			global i = [inc] {i}
+		while {i} < 10
+	`)
+	err := lang.DoAll()
+	if err != nil {
+		if perr, ok := err.(*lang.ParseError); ok {
+			t.Logf("%s %s", perr.Where.String(), perr.Error())
+		}
+		t.Fatal(err.Error())
+	}
+
+	expectGlobalVariable("abc", false)
+	expectGlobalVariable("i", 10)
+}

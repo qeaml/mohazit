@@ -103,12 +103,12 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 			}
 		}
 		if cond == nil {
-			return perr(stmt.KwToken, "loop is never given a condition")
+			return perr(stmt.KwToken, "this loop is never given a condition")
 		}
 		for {
 			l, ok := cond.Left.Get()
 			if !ok {
-				return perr(cond.Left.Tkn, "coult not determine left side value")
+				return perr(cond.Left.Tkn, "could not determine left side value")
 			}
 			r, ok := cond.Right.Get()
 			if !ok {
@@ -128,8 +128,11 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 						return err
 					}
 				}
+			} else {
+				break
 			}
 		}
+		return nil
 	case "label":
 		if isLocal {
 			return perr(stmt.KwToken, "labels not allowed in blocks")

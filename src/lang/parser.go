@@ -77,7 +77,7 @@ outer:
 					break outer
 				}
 			}
-		case tLiteral:
+		case tLiteral, tRef:
 			raw = append(raw, []*Token{tkn})
 		case tOper:
 			return nil, perrf(tkn, "unexpected token: %s", tkn.Type)
