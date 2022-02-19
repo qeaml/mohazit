@@ -221,7 +221,14 @@ func trimSpaceTokens(t []*Token) []*Token {
 	return rtrim
 }
 
-func parseConditional(tokens []*Token, negate bool) (bool, error) {
+type conditional struct {
+	Left   *Object
+	Oper   VComp
+	Right  *Object
+	Negate bool
+}
+
+func parseConditional(tokens []*Token, negate bool) (*conditional, error) {
 	l := []*Token{}
 	var op *Token = nil
 	r := []*Token{}
@@ -233,45 +240,43 @@ func parseConditional(tokens []*Token, negate bool) (bool, error) {
 			case tOper:
 				op = tkn
 			default:
-				return false, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
+				return nil, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 			}
 		} else {
 			switch tkn.Type {
 			case tIdent, tLiteral, tSpace, tBracket, tRef:
 				r = append(r, tkn)
 			case tOper:
-				return false, perr(tkn, "operator chaining not yet implemented")
+				return nil, perr(tkn, "operator chaining not yet implemented")
 			default:
-				return false, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
+				return nil, perrf(tkn, "unexpected %s in conditional", tkn.Type.String())
 			}
 		}
 	}
 	if len(l) < 1 {
-		return false, perr(op, "not enough tokens on left side of operator")
+		return nil, perr(op, "not enough tokens on left side of operator")
 	}
 	if len(r) < 1 {
-		return false, perrf(op, "not enough tokens on right side of operator (want 1, got %d)", len(r))
+		return nil, perrf(op, "not enough tokens on right side of operator (want 1, got %d)", len(r))
 	}
 	lVal, err := parseObject(l)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	rVal, err := parseObject(r)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	c, ok := Comps[op.Raw]
 	if !ok {
-		return false, perrf(op, "unknown comparator %s", op.Raw)
+		return nil, perrf(op, "unknown comparator %s", op.Raw)
 	}
-	v, err := c(lVal, rVal)
-	if err != nil {
-		return false, err
-	}
-	if negate {
-		v = !v
-	}
-	return v, nil
+	return &conditional{
+		Left:   lVal,
+		Oper:   c,
+		Right:  rVal,
+		Negate: negate,
+	}, nil
 }
 
 func parseAssignment(tokens []*Token) (string, *Object, error) {

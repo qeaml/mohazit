@@ -32,10 +32,18 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		if !isLocal { // don't naively wipe locals
 			locals = make(map[string]*Object)
 		}
-		v, err := parseConditional(stmt.Args, stmt.Keyword == "unless")
+		cond, err := parseConditional(stmt.Args, stmt.Keyword == "unless")
 		if err != nil {
 			return err
 		}
+		v, err := cond.Oper(cond.Left, cond.Right)
+		if err != nil {
+			return err
+		}
+		if cond.Negate {
+			v = !v
+		}
+		hasElse := false
 		for {
 			substmt, err := NextStmt()
 			if err != nil {
@@ -46,6 +54,10 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 			}
 			switch substmt.Keyword {
 			case "else":
+				if hasElse {
+					return perr(substmt.KwToken, "unexpected else")
+				}
+				hasElse = true
 				v = !v
 			case "end":
 				return nil
