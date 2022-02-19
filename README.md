@@ -75,3 +75,22 @@ else
     say how??????
 end
 ```
+
+we have loops as well (with ***2*** different keywords!)
+
+```rb
+set i = 0
+# will say "hi" 10 times
+loop
+    global i = [inc] {i}
+    say hi
+while {i} < 10
+# show the 10
+say {i}
+
+# alternative keyword, they are the exact same
+repeat
+    say this code will never run
+# impossible condition!!!
+while true = false
+```
