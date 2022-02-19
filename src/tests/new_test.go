@@ -245,7 +245,12 @@ func TestLabel(t *testing.T) {
 		label hello-world
 			global ok = true
 		end
+		label bb-bb-bb
+			set my-bool = true
+			global bb-ok = {my-bool}
+		end
 		goto hello-world
+		goto bb-bb-bb
 	`)
 	err := lang.DoAll()
 	if err != nil {
@@ -256,6 +261,7 @@ func TestLabel(t *testing.T) {
 	}
 
 	expectGlobalVariable("ok", true)
+	expectGlobalVariable("bb-ok", true)
 }
 
 func TestLoop(t *testing.T) {
