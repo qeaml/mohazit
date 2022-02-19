@@ -38,11 +38,11 @@ func RunStmt(stmt *Statement, isLocal bool) error {
 		}
 		l, ok := cond.Left.Get()
 		if !ok {
-			return perr(stmt.KwToken, "could not determine value of left side")
+			return perr(cond.Left.Tkn, "could not determine value of left side")
 		}
 		r, ok := cond.Right.Get()
 		if !ok {
-			return perr(stmt.KwToken, "could not determine value of left side")
+			return perr(cond.Right.Tkn, "could not determine value of left side")
 		}
 		v, err := cond.Oper(l, r)
 		if err != nil {
