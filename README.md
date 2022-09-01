@@ -2,6 +2,12 @@
 
 dead simple scripting
 
+## archival note
+
+the code is now archived as i've moved on to [bigger and better things](https://github.com/syzkrash/skol)
+
+## original README
+
 the entirety of the mohazit scripting mini-language is implemented in pure Go
 
 here's an example of what mohazit code (will) look like:
